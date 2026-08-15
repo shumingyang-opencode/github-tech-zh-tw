@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>概念地圖 · GitHub 繁中教學站</title>
+<meta name="description" content="GitHub 平台功能全景圖——倉庫、協作、自動化、部署與開源，一張圖看懂。">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>概念地圖</h1>
+  <p class="subtitle">GitHub 平台的核心概念，一張圖看懂</p>
+</header>
+
+<nav class="topnav">
+  <a href="index.html">首頁</a>
+  <a href="map.html">概念地圖</a>
+  <a href="learning-path.html">學習路線</a>
+  <a href="docs/index.html">單元教學</a>
+  <a href="about.html">關於</a>
+</nav>
+
+<div class="back-link"><a href="index.html">← 回首頁</a></div>
+
+<div class="guide">
+  <p>
+    GitHub 做的事可以一句話講完：<strong>把用 Git 管理的程式碼，變成可協作、可審查、可自動化、可部署的線上專案</strong>。
+    下面從「倉庫」到「開源」拆解。
+  </p>
+
+  <h2>1. 基礎：Git 與倉庫 · Git &amp; Repos</h2>
+  <p>一切的起點（<a href="docs/unit-01-github-intro.html">單元 1</a>、<a href="docs/unit-02-first-repo.html">單元 2</a>）。</p>
+  <div class="concept-map">
+    <div class="cm-row">
+      <a class="cm-node on-ramp" href="docs/unit-01-github-intro.html"><span class="label">Git</span><span class="tag">本機版本控制工具</span></a>
+      <a class="cm-node on-ramp" href="docs/unit-01-github-intro.html"><span class="label">GitHub</span><span class="tag">雲端託管平台</span></a>
+      <a class="cm-node on-ramp" href="docs/unit-02-first-repo.html"><span class="label">Repo</span><span class="tag">專案倉庫</span></a>
+      <a class="cm-node on-ramp" href="docs/unit-02-first-repo.html"><span class="label">Commit</span><span class="tag">版本快照</span></a>
+    </div>
+    <div class="cm-row">
+      <a class="cm-node on-ramp" href="docs/unit-02-first-repo.html"><span class="label">Clone</span><span class="tag">複製到本機</span></a>
+      <a class="cm-node on-ramp" href="docs/unit-02-first-repo.html"><span class="label">Push / Pull</span><span class="tag">上傳 / 拉取</span></a>
+      <a class="cm-node on-ramp" href="docs/unit-02-first-repo.html"><span class="label">README</span><span class="tag">專案門面</span></a>
+      <a class="cm-node on-ramp" href="docs/unit-02-first-repo.html"><span class="label">.gitignore</span><span class="tag">排除檔案</span></a>
+    </div>
+  </div>
+
+  <h2>2. 協作：分支與 Pull Request</h2>
+  <p>多人開發的核心流程（<a href="docs/unit-03-branches-merge.html">單元 3</a>、<a href="docs/unit-04-pull-request.html">單元 4</a>）。</p>
+  <div class="concept-map">
+    <div class="cm-row">
+      <a class="cm-node service" href="docs/unit-03-branches-merge.html"><span class="label">分支</span><span class="tag">Branch 平行開發</span></a>
+      <a class="cm-node service" href="docs/unit-03-branches-merge.html"><span class="label">合併</span><span class="tag">Merge 整合</span></a>
+      <a class="cm-node service" href="docs/unit-03-branches-merge.html"><span class="label">衝突</span><span class="tag">Conflict 處理</span></a>
+      <a class="cm-node service" href="docs/unit-04-pull-request.html"><span class="label">PR</span><span class="tag">Pull Request 合併請求</span></a>
+    </div>
+    <div class="cm-row">
+      <a class="cm-node service" href="docs/unit-04-pull-request.html"><span class="label">Review</span><span class="tag">Code Review</span></a>
+      <a class="cm-node service" href="docs/unit-04-pull-request.html"><span class="label">保護分支</span><span class="tag">強制 PR 才能合併</span></a>
+      <a class="cm-node service" href="docs/unit-04-pull-request.html"><span class="label">關聯</span><span class="tag">Closes #issue</span></a>
+    </div>
+  </div>
+
+  <h2>3. 管理與發布：Issues / Pages / Actions</h2>
+  <p>把專案管好、部署出去、自動化（<a href="docs/unit-05-issues-project.html">單元 5</a>、<a href="docs/unit-06-github-pages.html">單元 6</a>、<a href="docs/unit-07-github-actions.html">單元 7</a>）。</p>
+  <div class="concept-map">
+    <div class="cm-row">
+      <a class="cm-node standalone" href="docs/unit-05-issues-project.html"><span class="label">Issues</span><span class="tag">任務與 bug 追蹤</span></a>
+      <a class="cm-node standalone" href="docs/unit-05-issues-project.html"><span class="label">Labels / Milestones</span><span class="tag">分類與里程碑</span></a>
+      <a class="cm-node standalone" href="docs/unit-06-github-pages.html"><span class="label">Pages</span><span class="tag">靜態網站部署</span></a>
+      <a class="cm-node standalone" href="docs/unit-07-github-actions.html"><span class="label">Actions</span><span class="tag">CI/CD 自動化</span></a>
+    </div>
+  </div>
+
+  <h2>4. 開源：參與與貢獻</h2>
+  <p>從使用者變成貢獻者（<a href="docs/unit-08-open-source-best-practices.html">單元 8</a>）。</p>
+  <div class="concept-map">
+    <div class="cm-row">
+      <a class="cm-node meta" href="docs/unit-08-open-source-best-practices.html"><span class="label">Fork</span><span class="tag">複製他人專案</span></a>
+      <a class="cm-node meta" href="docs/unit-08-open-source-best-practices.html"><span class="label">Contribute</span><span class="tag">貢獻流程</span></a>
+      <a class="cm-node meta" href="docs/unit-08-open-source-best-practices.html"><span class="label">License</span><span class="tag">授權</span></a>
+      <a class="cm-node meta" href="docs/unit-08-open-source-best-practices.html"><span class="label">gh CLI</span><span class="tag">命令列 GitHub</span></a>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <strong>小結：</strong>GitHub = 「Git 版本控制」×「協作流程（PR）」×「平台服務（Issues / Pages / Actions）」
+    ×「開源生態」。每個都是獨立主題，但都圍繞同一個核心——<strong>讓寫程式變成可合作的事</strong>。
+  </div>
+</div>
+
+<footer>
+  這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
+</footer>
+
+</div>
+</body>
+</html>

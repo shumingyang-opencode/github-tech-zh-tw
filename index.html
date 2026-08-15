@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub 繁中教學站 · github-tech-zh-tw</title>
+<meta name="description" content="把 GitHub 從帳號到開源貢獻做成中英對照的分層教學網站。">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>GitHub 繁體中文教學站</h1>
+  <p class="subtitle">從第一個 repo 到開源貢獻，做成中英對照的解說</p>
+  <p class="badge-line">8 單元 · 初階工程師 / 學生適用 · 內容 CC-BY-4.0</p>
+  <p class="tagline">
+    <strong>GitHub</strong> 是全球開發者的協作中心——程式碼託管、版本控制、Issue 追蹤、
+    Pull Request 審查、靜態網站與 CI/CD 自動化，一站搞定。本站在「會用 GitHub = 會跟世界一起寫程式」的時代，
+    帶你從零到能參與任何開源專案。
+  </p>
+</header>
+
+<nav class="topnav">
+  <a href="index.html">首頁</a>
+  <a href="map.html">概念地圖</a>
+  <a href="learning-path.html">學習路線</a>
+  <a href="docs/index.html">單元教學</a>
+  <a href="about.html">關於</a>
+</nav>
+
+<div class="entry-cards">
+  <a class="entry-card" href="map.html">
+    <div class="ec-icon">🕸️</div>
+    <div class="ec-title">概念地圖</div>
+    <div class="ec-en">Concept Map</div>
+    <div class="ec-desc">GitHub 平台功能全景圖——倉庫、協作、自動化、部署與開源，一張圖看懂。</div>
+    <div class="ec-pill"><span class="c-tag">功能總覽</span><span class="c-tag">一圖看懂</span></div>
+  </a>
+  <a class="entry-card" href="learning-path.html">
+    <div class="ec-icon">🧗</div>
+    <div class="ec-title">學習路線</div>
+    <div class="ec-en">Learning Path</div>
+    <div class="ec-desc">從使用到貢獻的分層路線：L0 認識 → L1 上手 → L2 協作 → L3 自動化 → L4 開源。</div>
+    <div class="ec-pill"><span class="c-tag">五層路線</span><span class="c-tag">循序漸進</span></div>
+  </a>
+  <a class="entry-card" href="docs/index.html">
+    <div class="ec-icon">📚</div>
+    <div class="ec-title">單元教學</div>
+    <div class="ec-en">Lessons</div>
+    <div class="ec-desc">8 個單元循序漸進：Repo、分支、PR、Issues、Pages、Actions 與開源協作。</div>
+    <div class="ec-pill"><span class="c-tag">8 單元</span><span class="c-tag">中英對照</span></div>
+  </a>
+  <a class="entry-card" href="about.html">
+    <div class="ec-icon">📝</div>
+    <div class="ec-title">關於本站</div>
+    <div class="ec-en">About</div>
+    <div class="ec-desc">網站緣起、授權方式與建置方式。</div>
+    <div class="ec-pill"><span class="c-tag">授權</span><span class="c-tag">建置</span></div>
+  </a>
+</div>
+
+<div class="guide" style="margin-top:2.6rem;">
+  <h2>為什麼學 GitHub？</h2>
+  <p>
+    GitHub 是現代工程師的「數位身分證」：找工作時是你的作品集，協作時是團隊的版本中心，
+    開源時是你向全世界展示程式碼的舞台。你會在本課程看到，
+    前面幾站的教學網站（Markdown / YAML / JSON）就是用 GitHub Pages 部署上線的——<strong>你正在使用的就是 GitHub 的產物</strong>。
+  </p>
+  <p>
+    學會 GitHub 等於解鎖整套「現代開發工作流」：<strong>版本控制</strong>（Git）、
+    <strong>協作審查</strong>（Pull Request）、<strong>專案管理</strong>（Issues）、
+    <strong>自動化</strong>（Actions）、<strong>部署</strong>（Pages）與<strong>開源參與</strong>。
+  </p>
+
+  <h2>立即體驗：Git vs GitHub</h2>
+  <div class="demo-grid">
+    <div class="demo-block">
+      <div class="demo-label">Git · 本機版本控制</div>
+      <pre>git init          <span class="hl-c"># 初始化</span>
+git add .         <span class="hl-c"># 暫存</span>
+git commit -m "msg" <span class="hl-c"># 記錄</span></pre>
+    </div>
+    <div class="demo-block">
+      <div class="demo-label">GitHub · 雲端協作</div>
+      <pre>git remote add origin https://github.com/you/repo.git
+git push -u origin main   <span class="hl-c"># 上傳</span>
+git pull                  <span class="hl-c"># 拉取</span></pre>
+    </div>
+  </div>
+  <div class="callout">
+    <strong>一句話：</strong>Git 是「工具」，GitHub 是「家」——你把用 Git 管理的程式碼託管到 GitHub，就能跟別人一起開發。
+    詳細差別見<a href="docs/unit-01-github-intro.html">單元 1</a>。
+  </div>
+</div>
+
+<footer>
+  這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>單元 6 · GitHub Pages · GitHub 繁中教學站</title>
+<meta name="description" content="GitHub Pages：免費靜態網站部署——本站就是活教材。">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>單元 6 · GitHub Pages</h1>
+  <p class="subtitle">把靜態網站免費部署上線 — GitHub Pages</p>
+</header>
+
+<nav class="topnav">
+  <a href="../index.html">首頁</a>
+  <a href="../map.html">概念地圖</a>
+  <a href="../learning-path.html">學習路線</a>
+  <a href="index.html">單元教學</a>
+  <a href="../about.html">關於</a>
+</nav>
+
+<div class="back-link"><a href="index.html">← 單元教學</a></div>
+
+<div class="guide">
+
+  <div class="callout">
+    <strong>活教材：</strong>你正在看的這個網站、以及 Markdown / YAML / JSON 三個教學站，
+    全部都是用 <strong>GitHub Pages</strong> 免費部署的。學完這單元，你就能複製同樣的事。
+  </div>
+
+  <h2>Pages 是什麼 · What is Pages</h2>
+  <p>
+    <strong>GitHub Pages</strong> 是 GitHub 內建的<strong>靜態網站託管</strong>服務——
+    把 repo 裡的 HTML/CSS/JS（或 Markdown）直接變成網站，免費、附 HTTPS、綁 github.io 網域。
+  </p>
+  <div class="demo-grid">
+    <div class="demo-block">
+      <div class="demo-label">repo 內容</div>
+      <pre>my-site/
+├── index.html
+├── about.html
+└── assets/
+    └── site.css</pre>
+    </div>
+    <div class="demo-block">
+      <div class="demo-label">發布後網址 · URL</div>
+      <pre>https://使用者.github.io/my-site/
+
+# 專案網頁：/repo名/
+# 個人/組織網頁：/（repo 名必須是 使用者.github.io）</pre>
+    </div>
+  </div>
+
+  <h2>啟用 Pages · 三種方式</h2>
+  <h3>方式一：從 main 分支（最簡單）</h3>
+  <div class="demo-block">
+    <div class="demo-label">操作 · SETUP</div>
+    <pre>1. repo → Settings → Pages
+2. Source: Deploy from a branch
+3. Branch: main  /  (root)
+4. Save → 等 1~2 分鐘建置
+5. 出現網址：https://你.github.io/repo名/</pre>
+  </div>
+  <div class="callout info">
+    <strong>進階：</strong>純靜態站記得加一個空的 <code>.nojekyll</code> 檔，
+    讓 GitHub 不要用 Jekyll 處理你的 HTML（本站就是這樣做的）。
+  </div>
+
+  <h3>方式二：GitHub Actions（自動化，單元 7 詳談）</h3>
+  <div class="demo-block">
+    <div class="demo-label">workflow 片段 · SNIPPET</div>
+    <pre><span class="hl-k">- uses:</span> <span class="hl-s">actions/configure-pages@v5</span>
+<span class="hl-k">- uses:</span> <span class="hl-s">actions/deploy-pages@v4</span></pre>
+  </div>
+  <p class="hint">適合需要建置步驟的專案（如 Astro / Vite 編譯後再部署）。</p>
+
+  <h3>方式三：gh CLI（命令列，單元 8 詳談）</h3>
+  <div class="demo-block">
+    <div class="demo-label">gh 指令 · COMMANDS</div>
+    <pre>gh repo create my-site --public --source=. --push
+gh api --method POST \
+  repos/USER/my-site/pages \
+  -f "source[branch]=main" -f "source[path]=/"</pre>
+  </div>
+
+  <h2>自訂網域 · Custom Domain</h2>
+  <p>想用自己的網域（如 <code>blog.example.com</code>）：</p>
+  <ol>
+    <li>Pages 設定填 CNAME：<code>blog.example.com</code>。</li>
+    <li>到你的 DNS 供應商加 CNAME 記錄指向 <code>使用者.github.io</code>。</li>
+    <li>等 DNS 生效，即可用 <code>https://blog.example.com</code> 存取。</li>
+  </ol>
+
+  <h2>限制要知道 · Limits</h2>
+  <table>
+    <tr><th>項目</th><th>限制</th></tr>
+    <tr><td>內容</td><td>靜態檔案（無後端、無資料庫）</td></tr>
+    <tr><td>建置次數</td><td>每月有一定配額（免費方案約 10 次/小時）</td></tr>
+    <tr><td>大小</td><td>repo 建議 1GB 以下</td></tr>
+    <tr><td>用途</td><td>禁用於商業用途的伺服器型服務（個人/專案網站 OK）</td></tr>
+  </table>
+  <div class="callout warn">
+    <strong>重要：</strong>Pages 是<strong>靜態</strong>的——沒有帳號登入、沒有伺服器端資料庫。
+    需要後端時，改用其他服務（如 Firebase、Vercel 等）。
+  </div>
+
+  <h2>動手做：部署你自己的教學站</h2>
+  <p>把前面學的串成實作：</p>
+  <ol>
+    <li>建一個 repo（如 <code>my-site</code>），放 <code>index.html</code> 與 <code>assets/site.css</code>。</li>
+    <li>Push 到 GitHub，加 <code>.nojekyll</code>。</li>
+    <li>Settings → Pages → Deploy from branch → main。</li>
+    <li>等 1–2 分鐘，<code>https://你.github.io/my-site/</code> 上線。</li>
+  </ol>
+  <p class="hint">想更深入，可回顧<a href="https://shumingyang-opencode.github.io/markdown-tech-zh-tw/" rel="noopener">本站姊妹站的結構</a>當範本。</p>
+
+  <div class="outcome">
+    <strong>看完這頁你應該能說出：</strong>
+    <ul>
+      <li>GitHub Pages 是什麼、免費能幹嘛。</li>
+      <li>從 main 分支啟用 Pages 的步驟。</li>
+      <li><code>.nojekyll</code> 的作用。</li>
+      <li>自訂網域的 CNAME 流程。</li>
+      <li>靜態的限制與替代方案。</li>
+    </ul>
+  </div>
+
+  <h2>延伸閱讀</h2>
+  <ul>
+    <li>下一篇：<a href="unit-07-github-actions.html">單元 7 · GitHub Actions</a>——自動化部署。</li>
+    <li><a href="https://docs.github.com/en/pages" rel="noopener">GitHub Docs: Pages</a></li>
+  </ul>
+
+  <div class="next-prev">
+    <a href="unit-05-issues-project.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 5 · Issues 與專案管理</div></a>
+    <a class="np-next" href="unit-07-github-actions.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 7 · GitHub Actions</div></a>
+  </div>
+</div>
+
+<footer>
+  這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
+</footer>
+
+</div>
+</body>
+</html>
