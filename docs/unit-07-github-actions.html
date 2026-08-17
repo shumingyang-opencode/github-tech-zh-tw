@@ -3,52 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>單元 7 · GitHub Actions · GitHub 繁中教學站</title>
-<meta name="description" content="GitHub Actions：CI/CD、workflow、secrets、常用 action。">
+<title>單元 7 · GitHub Actions · GitHub 繁體中文教學站</title>
+<meta name="description" content="workflow 結構、on 觸發、job/step、常用 action、Secrets、status checks">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
   <h1>單元 7 · GitHub Actions</h1>
-  <p class="subtitle">CI/CD 自動化 — GitHub Actions</p>
+  <p class="subtitle">workflow 結構、on 觸發、job·step、常用 action、secret</p>
 </header>
-
 <nav class="topnav">
   <a href="../index.html">首頁</a>
   <a href="../map.html">概念地圖</a>
   <a href="../learning-path.html">學習路線</a>
-  <a href="index.html">單元教學</a>
+  <a href="../docs/index.html">單元教學</a>
+  <a href="../glossary.html">術語表</a>
   <a href="../about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 單元教學</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 單元教學</a></div>
 <div class="guide">
+<h2>7.1 定義：GitHub Actions 是什麼</h2>
+<p><strong>GitHub Actions</strong> 讓你在「特定事件發生時」自動跑工作流程——最常見的就是 <strong>CI/CD</strong>：程式碼 push 後自動測試、建置、部署。CI（持續整合）＝每次變更自動檢查；CD（持續部署）＝檢查通過自動上線。</p>
+<div class="callout"><strong>一句話：</strong>Actions = 「在 GitHub 的雲端機器上，自動執行你寫好的劇本」。</div>
 
-  <p>
-    <strong>GitHub Actions</strong> 讓你在「特定事件發生時」自動跑工作流程——
-    最常見的就是 <strong>CI/CD</strong>：程式碼 push 後自動測試、建置、部署。
-  </p>
+<h2>7.2 核心概念：五個名詞</h2>
+<table>
+<tr><th>名詞</th><th>意義</th></tr>
+<tr><td><strong>Workflow</strong></td><td>一個自動化流程，寫在 <code>.github/workflows/*.yml</code></td></tr>
+<tr><td><strong>Event</strong></td><td>觸發條件（push、pull_request、schedule…）</td></tr>
+<tr><td><strong>Job</strong></td><td>一個工作單位（在一台 runner 上跑）</td></tr>
+<tr><td><strong>Step</strong></td><td>Job 裡的一步（跑指令或呼叫 action）</td></tr>
+<tr><td><strong>Action</strong></td><td>可重用的步驟套件（Marketplace 下載）</td></tr>
+<tr><td><strong>Runner</strong></td><td>執行環境（ubuntu-latest 等虛擬機）</td></tr>
+</table>
+<div class="demo-block">
+  <div class="demo-label">階層關係 · HIERARCHY</div>
+  <pre>Workflow（檔案）
+└── on（事件）
+└── jobs
+    └── job A（runner 1）
+        ├── step 1：uses 某 action
+        └── step 2：run 某指令
+    └── job B（runner 2，可並行）</pre>
+</div>
 
-  <h2>核心概念 · Core Concepts</h2>
-  <table>
-    <tr><th>名詞</th><th>意義</th></tr>
-    <tr><td><strong>Workflow</strong></td><td>一個自動化流程，寫在 <code>.github/workflows/*.yml</code></td></tr>
-    <tr><td><strong>Event</strong></td><td>觸發條件（push、pull_request、schedule…）</td></tr>
-    <tr><td><strong>Job</strong></td><td>一個工作單位（在一台 runner 上跑）</td></tr>
-    <tr><td><strong>Step</strong></td><td>Job 裡的一步（跑指令或呼叫 action）</td></tr>
-    <tr><td><strong>Action</strong></td><td>可重用的步驟套件（GitHub Marketplace 下載）</td></tr>
-    <tr><td><strong>Runner</strong></td><td>執行環境（ubuntu-latest 等虛擬機）</td></tr>
-  </table>
-
-  <h2>第一個 Workflow · Hello CI</h2>
-  <p>放在 <code>.github/workflows/ci.yml</code>：</p>
-  <div class="demo-block">
-    <div class="demo-label">.github/workflows/ci.yml</div>
-    <pre><span class="hl-k">name</span>: <span class="hl-s">CI</span>
+<h2>7.3 第一個 Workflow · Hello CI</h2>
+<p>放在 <code>.github/workflows/ci.yml</code>：</p>
+<div class="demo-block">
+  <div class="demo-label">.github/workflows/ci.yml</div>
+  <pre><span class="hl-k">name</span>: <span class="hl-s">CI</span>
 <span class="hl-k">on</span>:
   <span class="hl-k">push</span>:
     <span class="hl-k">branches</span>: <span class="hl-p">[</span>main<span class="hl-p">]</span>
@@ -64,91 +68,105 @@
           <span class="hl-k">node-version</span>: <span class="hl-n">20</span>
       <span class="hl-p">-</span> <span class="hl-k">run</span>: <span class="hl-s">npm ci</span>
       <span class="hl-p">-</span> <span class="hl-k">run</span>: <span class="hl-s">npm test</span></pre>
-  </div>
-  <div class="callout info">
-    <strong>解讀：</strong>push 到 main 或有人開 PR 時 → 開一台 ubuntu 虛擬機 →
-    依序執行 checkout（抓程式碼）、裝 Node、裝相依、跑測試。任何一步失敗，workflow 就顯示紅色。
-  </div>
+</div>
+<div class="callout info"><strong>解讀：</strong>push 到 main 或有人開 PR 時 → 開一台 ubuntu 虛擬機 → 依序執行 checkout（抓程式碼）、裝 Node、裝相依、跑測試。任何一步失敗，workflow 就顯示紅色。可到 repo 的 <strong>Actions 分頁</strong>看執行結果與 log。</div>
 
-  <h2>把 CI 當檢查閘門 · Status Checks</h2>
-  <p>
-    把 workflow 接上「保護分支」（單元 4），PR 的 CI 沒通過就<strong>不能合併</strong>——
-    這是團隊品質的第一道防線。
-  </p>
-  <div class="demo-block">
-    <div class="demo-label">保護分支設定 · SETTINGS</div>
-    <pre>Settings → Branches → Branch protection
-├── Require status checks to pass
-└── 勾選你的 workflow 名稱（如「test」）</pre>
-  </div>
+<h2>7.4 觸發事件 · Events 全覽</h2>
+<div class="demo-block">
+  <div class="demo-label">on · EVENTS</div>
+  <pre><span class="hl-k">on</span>:
+  <span class="hl-k">push</span>:                  <span class="hl-c"># push 時</span>
+  <span class="hl-k">pull_request</span>:          <span class="hl-c"># 開/更新 PR 時</span>
+  <span class="hl-k">schedule</span>:              <span class="hl-c"># 定時（cron）</span>
+    <span class="hl-p">-</span> <span class="hl-k">cron</span>: <span class="hl-s">"0 3 * * *"</span>   <span class="hl-c"># 每天凌晨 3 點</span>
+  <span class="hl-k">workflow_dispatch</span>:     <span class="hl-c"># 手動按鈕</span>
+  <span class="hl-k">issues</span>:                <span class="hl-c"># issue 事件</span></pre>
+</div>
+<p class="hint">cron 語法為「分 時 日 月 週」五段。<code>0 3 * * *</code> = 每天凌晨 3 點。手動觸發（workflow_dispatch）在 Actions 分頁按「Run workflow」。</p>
 
-  <h2>Secrets · 機密變數</h2>
-  <p>workflow 需要 API key、Token 時，<strong>不要寫死在 YAML</strong>，用 Secrets 加密存放。</p>
-  <div class="demo-block">
-    <div class="demo-label">設定與使用 · SETUP &amp; USE</div>
-    <pre><span class="hl-c"># 設定：Settings → Secrets and variables → Actions</span>
+<h2>7.5 常用 Action</h2>
+<table>
+<tr><th>Action</th><th>用途</th></tr>
+<tr><td><code>actions/checkout</code></td><td>把 repo 程式碼抓到 runner（幾乎每個 workflow 第一步）</td></tr>
+<tr><td><code>actions/setup-node</code> / <code>setup-python</code></td><td>安裝指定語言環境</td></tr>
+<tr><td><code>actions/cache</code></td><td>快取相依套件，加速 CI</td></tr>
+<tr><td><code>actions/upload-artifact</code> / <code>download-artifact</code></td><td>上傳/下載建置產物（跨 job）</td></tr>
+<tr><td><code>actions/deploy-pages</code></td><td>部署到 GitHub Pages（單元 6）</td></tr>
+<tr><td><code>dependabot</code>（內建）</td><td>自動更新相依套件並開 PR（單元 8）</td></tr>
+</table>
+
+<h2>7.6 Secrets：機密變數</h2>
+<p>workflow 需要 API key、Token 時，<strong>不要寫死在 YAML</strong>——寫進去就等於公開給所有能看到 repo 的人。用 Secrets 加密存放：</p>
+<div class="demo-block">
+  <div class="demo-label">設定與使用 · SETUP &amp; USE</div>
+  <pre><span class="hl-c"># 設定：Settings → Secrets and variables → Actions</span>
 <span class="hl-c"># 名稱如：MY_API_KEY</span>
 
 <span class="hl-c"># 使用：在 workflow 中以 ${{ secrets.MY_API_KEY }} 引用</span>
 <span class="hl-k">env</span>:
   <span class="hl-k">API_KEY</span>: <span class="hl-p">${{</span> <span class="hl-k">secrets</span>.MY_API_KEY <span class="hl-p">}}</span></pre>
-  </div>
-  <div class="callout warn">
-    <strong>安全：</strong>Secrets 不會顯示在 log 中，但</strong>不要自己 echo</strong> 它——
-    「<code>echo $API_KEY</code>」這種 debug 動作會把機密印出來。
-  </div>
+</div>
+<div class="callout warn"><strong>安全：</strong>Secrets 不會顯示在 log 中，但<strong>不要自己 echo</strong> 它——「<code>echo $API_KEY</code>」這種 debug 動作會把機密印出來，GitHub 有時會事後遮罩，但別賭。</div>
 
-  <h2>常用 Action · Popular Actions</h2>
-  <table>
-    <tr><th>Action</th><th>用途</th></tr>
-    <tr><td><code>actions/checkout</code></td><td>把 repo 程式碼抓到 runner</td></tr>
-    <tr><td><code>actions/setup-node</code> / <code>setup-python</code></td><td>安裝指定語言環境</td></tr>
-    <tr><td><code>actions/cache</code></td><td>快取相依套件，加速 CI</td></tr>
-    <tr><td><code>actions/upload-artifact</code></td><td>上傳建置產物</td></tr>
-    <tr><td><code>actions/deploy-pages</code></td><td>部署到 GitHub Pages（單元 6）</td></tr>
-    <tr><td><code>dependabot</code>（內建）</td><td>自動更新相依套件並開 PR</td></tr>
-  </table>
+<h2>7.7 把 CI 當檢查閘門 · Status Checks</h2>
+<p>把 workflow 接上「保護分支」（單元 4），PR 的 CI 沒通過就<strong>不能合併</strong>——這是團隊品質的第一道防線：</p>
+<div class="demo-block">
+  <div class="demo-label">保護分支設定 · SETTINGS</div>
+  <pre>Settings → Branches → Branch protection
+├── Require status checks to pass
+└── 勾選你的 workflow 名稱（如「test」）</pre>
+</div>
+<div class="callout"><strong>為什麼是「閘門」：</strong>未通過的 PR 無法合併 → 壞程式碼進不了 main → main 永遠「已知可跑」。這正是 CI 的核心價值。</div>
 
-  <h2>排程與手動觸發 · Schedule &amp; Manual</h2>
-  <div class="demo-block">
-    <div class="demo-label">觸發方式 · EVENTS</div>
-    <pre><span class="hl-k">on</span>:
-  <span class="hl-k">push</span>:                  <span class="hl-c"># push 時</span>
-  <span class="hl-k">schedule</span>:              <span class="hl-c"># 定時（cron）</span>
-    <span class="hl-p">-</span> <span class="hl-k">cron</span>: <span class="hl-s">"0 3 * * *"</span>
-  <span class="hl-k">workflow_dispatch</span>:     <span class="hl-c"># 手動按鈕</span></pre>
-  </div>
-  <p class="hint">cron 語法為「分 時 日 月 週」五段。<code>0 3 * * *</code> = 每天凌晨 3 點。</p>
+<h2>7.8 進階：快取、Matrix、Artifact</h2>
+<div class="demo-block">
+  <div class="demo-label">matrix · 多版本測試</div>
+  <pre><span class="hl-k">strategy</span>:
+  <span class="hl-k">matrix</span>:
+    <span class="hl-k">node-version</span>: <span class="hl-p">[</span><span class="hl-n">18</span><span class="hl-p">,</span> <span class="hl-n">20</span>, <span class="hl-n">22</span><span class="hl-p">]</span>
+    <span class="hl-k">os</span>: <span class="hl-p">[</span>ubuntu-latest<span class="hl-p">,</span> macos-latest<span class="hl-p">]</span>
+<span class="hl-c"># 產生 3×2 = 6 台 runner 平行跑，確保多環境相容</span></pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">cache · 加速</div>
+  <pre><span class="hl-p">-</span> <span class="hl-k">uses</span>: <span class="hl-s">actions/cache@v4</span>
+  <span class="hl-k">with</span>:
+    <span class="hl-k">path</span>: <span class="hl-s">~/.npm</span>
+    <span class="hl-k">key</span>: <span class="hl-p">${{</span> <span class="hl-k">runner.os</span> <span class="hl-p">}}-npm-</span><span class="hl-p">${{</span> <span class="hl-k">hashFiles</span>(<span class="hl-s">'package-lock.json'</span>) <span class="hl-p">}}</span></pre>
+</div>
+
+<h2>7.9 Worked Example：完整 CI + 自動部署</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">練習 · PRACTICE</div><pre>1. 新增 .github/workflows/ci.yml
+   - on push + pull_request
+   - job test：checkout + setup-node
+     + npm ci + npm test
+2. 開 PR 測試 CI 是否啟動
+3. 故意改壞一行 → CI 紅 → 修回 → 綠
+4. 到 Settings → Branches 勾 Require status checks</pre></div>
+  <div class="demo-block"><div class="demo-label">驗收 · ACCEPT</div><div class="demo-render">
+    <p>✅ PR 上看到 CI 通過<br>✅ 壞 PR 無法合併（閘門生效）<br>✅ Actions 分頁看得到執行歷史<br>✅ Matrix 有多環境時全部通過</p>
+  </div></div>
+</div>
+<div class="callout"><strong>練習：</strong>為你的 repo 加一份 CI，並故意「先紅再綠」一次——親眼看到 CI 擋住壞 PR，比任何解釋都有效。</div>
 
   <div class="outcome">
-    <strong>看完這頁你應該能說出：</strong>
-    <ul>
-      <li>Workflow / Job / Step / Action 的關係。</li>
-      <li>寫一份最小的 CI workflow。</li>
-      <li>如何用「status checks」擋住壞 PR。</li>
-      <li>Secrets 的正確用法與安全。</li>
-      <li>五種常用 action 的用途。</li>
-    </ul>
+    <strong>看完這單元你應該能說出：</strong>
+    <ul><li>說出 Workflow / Job / Step / Action / Runner 的關係。</li><li>寫出一份最小的 CI workflow。</li><li>用 on 設定 push / PR / 排程 / 手動觸發。</li><li>正確使用 Secrets 保護機密，並知道 log 洩漏的風險。</li><li>用 status checks 把 CI 變成 PR 的合併閘門。</li></ul>
   </div>
 
   <h2>延伸閱讀</h2>
   <ul>
-    <li>下一篇：<a href="unit-08-open-source-best-practices.html">單元 8 · 開源協作與最佳實踐</a>。</li>
-    <li><a href="https://docs.github.com/en/actions" rel="noopener">GitHub Docs: Actions</a></li>
-    <li><a href="https://github.com/marketplace?type=actions" rel="noopener">GitHub Actions Marketplace</a></li>
-  </ul>
+<li>上一篇：<a href="unit-06-github-pages.html">單元 6 · GitHub Pages</a>。</li>
+<li>下一篇：<a href="unit-08-open-source-best-practices.html">單元 8 · 開源協作與最佳實踐</a>。</li>
+<li><a href="../glossary.html">術語表</a>：複習全站。</li>
+</ul>
 
-  <div class="next-prev">
+<div class="next-prev">
     <a href="unit-06-github-pages.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 6 · GitHub Pages</div></a>
     <a class="np-next" href="unit-08-open-source-best-practices.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 8 · 開源協作與最佳實踐</div></a>
-  </div>
 </div>
-
-<footer>
-  這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
 </div>
-</body>
-</html>
+<footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

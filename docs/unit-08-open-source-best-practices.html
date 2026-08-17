@@ -3,157 +3,175 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>單元 8 · 開源協作與最佳實踐 · GitHub 繁中教學站</title>
-<meta name="description" content="GitHub 開源協作與最佳實踐：Fork、contribute、License、社群禮儀、gh CLI、安全。">
+<title>單元 8 · 開源協作與最佳實踐 · GitHub 繁體中文教學站</title>
+<meta name="description" content="License、CONTRIBUTING、CODE_OF_CONDUCT、Release、Fork 貢獻、gh CLI、安全">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
   <h1>單元 8 · 開源協作與最佳實踐</h1>
-  <p class="subtitle">從使用者變成貢獻者 — Open Source &amp; Best Practices</p>
+  <p class="subtitle">LICENSE、CONTRIBUTING、CODE_OF_CONDUCT、Release、社群經營</p>
 </header>
-
 <nav class="topnav">
   <a href="../index.html">首頁</a>
   <a href="../map.html">概念地圖</a>
   <a href="../learning-path.html">學習路線</a>
-  <a href="index.html">單元教學</a>
+  <a href="../docs/index.html">單元教學</a>
+  <a href="../glossary.html">術語表</a>
   <a href="../about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 單元教學</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 單元教學</a></div>
 <div class="guide">
+<h2>8.1 開源是什麼</h2>
+<p><strong>開源（Open Source）</strong>＝原始碼公開、任何人可看、可用、可改、可再散布（依授權條款）。GitHub 上絕大多數 repo 都是開源的。你從「使用者」變成「貢獻者（contributor）」的旅程，就在這一單元。</p>
+<div class="callout"><strong>先講法律：</strong>「原始碼公開」≠「可以隨意使用」。合法範圍完全由 <strong>LICENSE（授權）</strong>決定。</div>
 
-  <p>
-    最後一單元：學會參與開源、把 repo 養成專業水準，並認識 <code>gh</code> 命令列與安全。
-  </p>
+<h2>8.2 LICENSE：沒有它 = 不能合法使用</h2>
+<p>沒有 LICENSE 的 repo，<strong>法律上別人不能合法使用你的程式碼</strong>（著作權默認保留）。開源專案一定要放。常見選擇：</p>
+<table>
+<tr><th>授權</th><th>特點</th></tr>
+<tr><td><strong>MIT</strong></td><td>最寬鬆：幾乎隨你用，附授權聲明即可</td></tr>
+<tr><td><strong>Apache-2.0</strong></td><td>寬鬆 + 專利授權保障</td></tr>
+<tr><td><strong>GPL-3.0</strong></td><td>改作也必須開源（copyleft）</td></tr>
+<tr><td><strong>CC-BY-4.0</strong></td><td>內容/文件用（本站就是用這個）</td></tr>
+</table>
+<p class="hint">不確定選哪個？用 <a href="https://choosealicense.com/" rel="noopener">choosealicense.com</a> 引導。也可在 GitHub 建 repo 時直接選 License。</p>
 
-  <h2>Fork · 複製別人的專案</h2>
-  <p>
-    <strong>Fork</strong> = 把別人的 repo「複製一份到你的帳號」，你就可以隨意改。
-    之後可以（1）自己用，或（2）發起 <strong>Pull Request</strong> 把改動貢獻回原專案。
-  </p>
-  <div class="demo-block">
-    <div class="demo-label">Fork 工作流 · WORKFLOW</div>
-    <pre>1. 瀏覽某 repo → 右上角 Fork
-2. clone 你的 fork 到本機
+<h2>8.3 CONTRIBUTING.md：貢獻規範</h2>
+<p>告訴貢獻者「怎麼參與」——是開源專案的門檻文件。大綱：</p>
+<div class="demo-block">
+  <div class="demo-label">CONTRIBUTING.md · 大綱</div>
+  <pre># 貢獻指引
+1. 如何回報 bug（找哪個 issue 模板）
+2. 如何提功能請求（先開 Discussion？）
+3. 開發流程（branch 命名、commit 格式、測試）
+4. 程式碼風格（lint / format）
+5. Review 流程（誰審、多久回應）
+6. 行為守則（指向 CODE_OF_CONDUCT）</pre>
+</div>
+<div class="callout info"><strong>為什麼重要：</strong>一份清楚的 CONTRIBUTING 能讓「第一次貢獻」的人不必問東問西，直接上手——好維護者從降低貢獻門檻開始。</div>
+
+<h2>8.4 CODE_OF_CONDUCT：行為守則</h2>
+<p>規定社群互動的底線（尊重、不騷擾、包容）。GitHub 有內建模板（<code>Contributor Covenant</code> 最常見）。它宣示「這個專案歡迎所有人」，也是發生紛爭時的處理依據。</p>
+
+<h2>8.5 Release：發佈版本</h2>
+<p>用 <strong>tag</strong> 標記某個 commit 為「正式版本」，再建立 <strong>Release</strong>（含發佈說明與附件）：</p>
+<div class="demo-block">
+  <div class="demo-label">發佈流程 · RELEASE</div>
+  <pre>1. 確定 main 通過所有 CI
+2. 建立 tag：git tag v1.0.0 &amp;&amp; git push --tags
+3. GitHub → Releases → Create a new release
+4. 選 tag、寫 Release Notes（變更摘要）
+5. 可附上建置產物（source code / binary）</pre>
+</div>
+<p><strong>語意化版本（SemVer）：</strong><code>主版.次版.修訂</code>——<code>v2.1.0</code>：主版（不相容變更）、次版（新增功能）、修訂（bug 修正）。遵守它，使用者才知道升級會不會壞。</p>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">Release Notes · 範例</div><pre>## v1.2.0 (2026-09-01)
+
+### ✨ 新增
+- 支援暗色模式
+- 新的匯出格式
+
+### 🐛 修正
+- 修正登入頁在 Safari 的空白問題
+
+### ⚠️ 破壞性變更
+- 最低 Node 版本升至 18</pre></div>
+  <div class="demo-block"><div class="demo-label">拆解 · ANATOMY</div><div class="demo-render">
+    <p>① 版本號＋日期<br>② 依類型分節（新增/修正/破壞）<br>③ <strong>破壞性變更一定要註明</strong><br>④ emoji 讓掃讀更快<br>⑤ 用 gh 快速發佈：<code>gh release create v1.2.0 --generate-notes</code></p>
+  </div></div>
+</div>
+<div class="callout info"><strong>自動生成：</strong><code>gh release create v1.2.0 --generate-notes</code> 會依「該版本以來的 PR 標題」自動產生 Release Notes，再人工微調即可。</div>
+
+<h2>8.6 貢獻流程：Fork → 開發 → PR</h2>
+<p><strong>Fork</strong> = 把別人的 repo「複製一份到你的帳號」，你就可以隨意改，再發 PR 貢獻回去：</p>
+<div class="demo-block">
+  <div class="demo-label">Fork 工作流 · WORKFLOW</div>
+  <pre>1. 瀏覽某 repo → 右上角 Fork
+2. clone 你的 fork：
    git clone https://github.com/你/原repo.git
-3. 加上游 remote（原專案）
+3. 加「上游」remote（原專案）：
    git remote add upstream https://github.com/原作者/原repo.git
-4. 開分支 → 改 → push → 開 PR（原 repo 的「New pull request」）</pre>
-  </div>
-  <div class="callout info">
-    <strong>好習慣：</strong>開發前 <code>git fetch upstream &amp;&amp; git merge upstream/main</code>，
-    把原專案最新進度同步進來，避免 PR 衝突。
-  </div>
+4. 開分支 → 改 → push → 開 PR
+   （PR 方向：原 repo 的 base ← 你的 fork 分支）</pre>
+</div>
+<div class="callout info"><strong>同步上游：</strong>開發前 <code>git fetch upstream &amp;&amp; git merge upstream/main</code>，把原專案最新進度同步進來，避免 PR 衝突。這步忘了，衝突就來了。</div>
+<div class="demo-block">
+  <div class="demo-label">第一次貢獻 · FIRST CONTRIBUTION</div>
+  <pre>1. 找 label:"good first issue" / "help wanted"
+2. 先留言「我想做這個」，確認再動手
+3. 讀 CONTRIBUTING.md
+4. 小步提交、寫清楚 commit message
+5. 開 PR，耐心回覆 review 意見</pre>
+</div>
+<div class="callout"><strong>從小的開始：</strong>改錯字、修文件、加測試都是極好的第一筆貢獻——README 修一個連結，就完成一次真實開源貢獻。</div>
 
-  <h2>如何開始貢獻 · First Contribution</h2>
-  <ol>
-    <li>找標籤 <code>good first issue</code> 或 <code>help wanted</code> 的專案（單元 5）。</li>
-    <li>先留言「我想做這個」，確認再動手。</li>
-    <li>讀專案的 CONTRIBUTING.md（貢獻規範）。</li>
-    <li>小步提交、寫清楚 commit message。</li>
-    <li>開 PR，耐心回覆 review 意見。</li>
-  </ol>
-  <div class="callout">
-    <strong>從小的開始：</strong>改錯字、修文件、加測試都是極好的第一筆貢獻——
-    README 修一個連結，就完成一次真實開源貢獻。
-  </div>
+<h2>8.7 社群經營 · 維護者的習慣</h2>
+<ul>
+<li><strong>README 品質</strong>：一句話、徽章、安裝、使用、截圖——決定陌生人留不留步。</li>
+<li><strong>回應 Issue / PR</strong>：即使暫時無法處理，回一句「感謝回報，已加入 backlog」也很有價值。</li>
+<li><strong>用 label 管理</strong>：<code>good first issue</code>、<code>help wanted</code> 讓新手找得到事做。</li>
+<li><strong>自動化接手</strong>：Dependabot 開的 PR、CI 的 status check，幫你守住品質。</li>
+</ul>
 
-  <h2>License · 授權</h2>
-  <p>沒有 LICENSE 的 repo，<strong>法律上別人不能合法使用你的程式碼</strong>。開源專案一定要放。</p>
-  <table>
-    <tr><th>授權</th><th>特點</th></tr>
-    <tr><td><strong>MIT</strong></td><td>最寬鬆：幾乎隨你用，附授權聲明即可</td></tr>
-    <tr><td><strong>Apache-2.0</strong></td><td>寬鬆 + 專利授權保障</td></tr>
-    <tr><td><strong>GPL-3.0</strong></td><td>改作也必須開源（copyleft）</td></tr>
-    <tr><td><strong>CC-BY-4.0</strong></td><td>內容/文件用（本站就是用這個）</td></tr>
-  </table>
-  <p class="hint">本站四個教學站的內容授權都是 CC-BY-4.0。</p>
+<h2>8.8 社群禮儀與安全</h2><table>
+<tr><th>類別</th><th>做法</th></tr>
+<tr><td>禮儀</td><td>先搜再問（查 Issues / Discussions）；Issue 給完整資訊；被拒別氣餒；語氣友善、感謝維護者</td></tr>
+<tr><td>安全</td><td>Secrets 用 GitHub Secrets（單元 7）；Dependabot 掃依賴漏洞；Code scanning 掃程式；簽署 commit（GPG/SSH）；保護分支；Secret scanning 偵測洩漏 Token</td></tr>
+</table>
+<div class="callout warn"><strong>紅線：</strong>repo 出現意外洩漏的 Token/金鑰 → ① 立即到設定<strong>撤銷</strong>該憑證；② 用 <code>git filter-repo</code> 清理歷史；③ 通知 GitHub support。撤銷永遠比清理更重要。</div>
 
-  <h2>社群禮儀 · Community Etiquette</h2>
-  <ul>
-    <li><strong>先搜再問</strong>：同一問題可能已有人問過（查 Issues、Discussions）。</li>
-    <li><strong>Issue 提供完整資訊</strong>：版本、環境、步驟、報錯。</li>
-    <li><strong>被拒別氣餒</strong>：維護者拒絕 PR 是常事，虛心理解理由。</li>
-    <li><strong>語氣友善</strong>：開源是志願貢獻，感謝維護者。</li>
-  </ul>
-
-  <h2>gh CLI · 命令列 GitHub</h2>
-  <p>整個 GitHub 都能在終端機操作，寫指令時超方便：</p>
-  <div class="demo-block">
-    <div class="demo-label">gh 常用指令 · COMMANDS</div>
-    <pre>gh auth login              <span class="hl-c"># 登入</span>
+<h2>8.9 gh CLI · 命令列 GitHub</h2>
+<div class="demo-block">
+  <div class="demo-label">gh 常用指令 · COMMANDS</div>
+  <pre>gh auth login              <span class="hl-c"># 登入（也設定 git 身份）</span>
 gh repo create my-site --public --source=. --push
 gh repo clone owner/repo
 gh issue list               <span class="hl-c"># 列出 issues</span>
 gh issue create --title "..." --body "..."
-gh pr create --fill         <span class="hl-c"># 開 PR</span>
-gh pr checkout 123          <span class="hl-c"># 切到某 PR 的分支</span></pre>
-  </div>
+gh pr create --fill         <span class="hl-c"># 開 PR（用 commit 資訊自動填）</span>
+gh pr checkout 123          <span class="hl-c"># 切到某 PR 的分支</span>
+gh pr merge 123 --squash    <span class="hl-c"># 用 squash 合併</span></pre>
+</div>
 
-  <h2>安全最佳實踐 · Security</h2>
-  <table>
-    <tr><th>做法</th><th>說明</th></tr>
-    <tr><td><strong>Secrets 用 GitHub Secrets</strong></td><td>不寫進 repo（單元 7）</td></tr>
-    <tr><td><strong>Dependabot</strong></td><td>自動掃描相依套件漏洞並開 PR 修復</td></tr>
-    <tr><td><strong>Code scanning</strong></td><td>內建弱點掃描（可用 CodeQL）</td></tr>
-    <tr><td><strong>簽署 commit</strong></td><td>用 GPG/SSH 簽名，證明是你提交的</td></tr>
-    <tr><td><strong>保護分支</strong></td><td>強制 PR + review + CI（單元 4、7）</td></tr>
-    <tr><td><strong>Secret scanning</strong></td><td>GitHub 主動掃描洩漏的 Token 並通知</td></tr>
-  </table>
-  <div class="callout warn">
-    <strong>紅線：</strong>repo 出現意外洩漏的 Token/金鑰 → 立即到設定撤銷該憑證，再清理歷史
-    （<code>git filter-repo</code>），最後通知 GitHub support。
-  </div>
-
-  <h2>把整門課串起來</h2>
-  <ol>
-    <li><strong>懂</strong>：Git vs GitHub、平台總覽（單元 1）。</li>
-    <li><strong>上手</strong>：repo、commit、push（單元 2）。</li>
-    <li><strong>協作</strong>：分支、PR、review、Issues（單元 3–5）。</li>
-    <li><strong>發布與自動化</strong>：Pages、Actions（單元 6–7）。</li>
-    <li><strong>貢獻與責任</strong>：Fork、License、安全（本單元）。</li>
-  </ol>
-
-  <div class="callout">
-    <strong>畢業作業：</strong>Fork 本站（<code>github-tech-zh-tw</code>），
-    修一個錯字或加一段內容，再開一個 PR 回來——完成你的第一次開源貢獻！
-  </div>
+<h2>8.10 把整門課串起來</h2>
+<div class="demo-block">
+  <div class="demo-label">課程回顧 · RECAP</div>
+  <pre>1. 懂：Git vs GitHub、平台總覽          （單元 1）
+2. 上手：repo、commit、push             （單元 2）
+3. 協作：分支、衝突解決                  （單元 3）
+4. 審查：PR、review、保護分支            （單元 4）
+5. 管理：Issues、Labels、Projects       （單元 5）
+6. 發布：Pages、自訂網域                （單元 6）
+7. 自動化：Actions、CI、Secrets         （單元 7）
+8. 開源：License、CONTRIBUTING、Release （本單元）</pre>
+</div>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">畢業作業 · CAPSTONE</div><pre>Fork 本站（github-tech-zh-tw），
+修一個錯字或加一段內容，
+再開一個 PR 回來——
+完成你的第一次開源貢獻！</pre></div>
+  <div class="demo-block"><div class="demo-label">驗收 · ACCEPT</div><div class="demo-render">
+    <p>✅ 已選好 LICENSE<br>✅ 看過一份真實的 CONTRIBUTING.md<br>✅ 走完一次 Fork → PR<br>✅ 會用 tag 發 Release<br>✅ 知道 Token 洩漏的第一反應</p>
+  </div></div>
+</div>
 
   <div class="outcome">
-    <strong>看完這頁你應該能說出：</strong>
-    <ul>
-      <li>Fork 與 PR 的貢獻流程、upstream 同步。</li>
-      <li>如何找到第一個可貢獻的 issue。</li>
-      <li>License 的選擇與「沒 License = 不能合法使用」。</li>
-      <li>社群禮儀與被拒 PR 的心態。</li>
-      <li>gh CLI 常用指令與安全最佳實踐。</li>
-    </ul>
+    <strong>看完這單元你應該能說出：</strong>
+    <ul><li>說出「沒有 LICENSE = 別人不能合法使用你的程式碼」。</li><li>寫出 CONTRIBUTING.md 與 CODE_OF_CONDUCT 的大綱。</li><li>用 tag + Release + 語意化版本發佈一個版本。</li><li>走完 Fork → 開發 → upstream 同步 → PR 的完整貢獻流程。</li><li>列出至少五個開源社群禮儀與安全最佳實踐。</li></ul>
   </div>
 
   <h2>延伸閱讀</h2>
   <ul>
-    <li><a href="https://docs.github.com/en/get-started" rel="noopener">GitHub Docs: Getting started</a></li>
-    <li><a href="https://choosealicense.com/" rel="noopener">choosealicense.com</a>（選授權）</li>
-    <li><a href="https://cli.github.com/" rel="noopener">GitHub CLI</a> · <a href="../learning-path.html">學習路線</a>：複習全站</li>
-  </ul>
+<li>上一篇：<a href="unit-07-github-actions.html">單元 7 · GitHub Actions</a>。</li>
+<li><a href="../glossary.html">術語表</a>：複習全站。</li>
+</ul>
 
-  <div class="next-prev">
+<div class="next-prev">
     <a href="unit-07-github-actions.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 7 · GitHub Actions</div></a>
-    <a class="np-next" href="index.html"><div class="np-label">課程完成 →</div><div class="np-name">回首頁 · 單元教學目錄</div></a>
-  </div>
 </div>
-
-<footer>
-  這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
 </div>
-</body>
-</html>
+<footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

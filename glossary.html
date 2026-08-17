@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>術語表 · GitHub 繁體中文教學站</title>
+<meta name="description" content="GitHub 術語表">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>術語表</h1>
+  <p class="subtitle">全站 GitHub 術語速查</p>
+</header>
+<nav class="topnav">
+  <a href="index.html">首頁</a>
+  <a href="map.html">概念地圖</a>
+  <a href="learning-path.html">學習路線</a>
+  <a href="docs/index.html">單元教學</a>
+  <a href="glossary.html">術語表</a>
+  <a href="about.html">關於</a>
+</nav><div class="back-link"><a href="index.html">← 回首頁</a></div>
+<div class="guide">
+  <div class="callout info"><strong>術語中英對照</strong>——把 GitHub 的每個關鍵字與「它對應的概念」對起來。名稱 / 英文 / 說明 / 出自單元。</div>
+<h2>核心概念 · Core</h2>
+<table><tr><th>名稱</th><th>英文</th><th>說明</th><th>單元</th></tr>
+<tr><td><strong>Repo</strong></td><td>Repository</td><td>專案倉庫：程式碼＋版本歷史＋GitHub 服務的容器</td><td>單元 2</td></tr><tr><td><strong>Commit</strong></td><td>Commit</td><td>一次變更的版本快照，帶 commit message</td><td>單元 2</td></tr><tr><td><strong>Branch</strong></td><td>Branch</td><td>指向 commit 的平行開發軌道（書籤）</td><td>單元 3</td></tr><tr><td><strong>HEAD</strong></td><td>HEAD</td><td>指向「你目前所在分支」的指標</td><td>單元 3</td></tr><tr><td><strong>Merge</strong></td><td>Merge</td><td>把某分支的變更併入目前分支</td><td>單元 3</td></tr><tr><td><strong>Clone</strong></td><td>Clone</td><td>把遠端 repo（含歷史）複製到本機</td><td>單元 2</td></tr><tr><td><strong>Push / Pull</strong></td><td>Push / Pull</td><td>上傳本機變更 / 抓取並合併遠端變更</td><td>單元 2</td></tr><tr><td><strong>Fork</strong></td><td>Fork</td><td>把別人的 repo 複製一份到你的帳號</td><td>單元 8</td></tr><tr><td><strong>Star</strong></td><td>Star</td><td>為某 repo 點讚收藏，表示你喜歡它</td><td>單元 1</td></tr><tr><td><strong>Remote</strong></td><td>Remote</td><td>遠端位置暱稱，慣例叫 origin / upstream</td><td>單元 2</td></tr>
+</table>
+<h2>協作 · Collaboration</h2>
+<table><tr><th>名稱</th><th>英文</th><th>說明</th><th>單元</th></tr>
+<tr><td><strong>Pull Request</strong></td><td>PR</td><td>請求把某分支合併進另一分支的審查流程</td><td>單元 4</td></tr><tr><td><strong>Code Review</strong></td><td>Code Review</td><td>在 PR 中逐行檢視與留言的審查</td><td>單元 4</td></tr><tr><td><strong>Approve</strong></td><td>Approve</td><td>審查同意合併</td><td>單元 4</td></tr><tr><td><strong>Squash</strong></td><td>Squash and Merge</td><td>把整條分支壓成一個 commit 後合併</td><td>單元 4</td></tr><tr><td><strong>Rebase</strong></td><td>Rebase and Merge</td><td>線性重放 commit，無合併節點</td><td>單元 4</td></tr><tr><td><strong>Issue</strong></td><td>Issue</td><td>一件事的討論單：bug、功能、待辦</td><td>單元 5</td></tr><tr><td><strong>Label</strong></td><td>Label</td><td>用顏色標籤分類 issue</td><td>單元 5</td></tr><tr><td><strong>Milestone</strong></td><td>Milestone</td><td>把一群 issue 歸到版本/截止日</td><td>單元 5</td></tr><tr><td><strong>Projects</strong></td><td>Projects</td><td>看板式的任務狀態管理</td><td>單元 5</td></tr><tr><td><strong>Closes #n</strong></td><td>Closes #n</td><td>PR 描述中自動關閉 issue n 的關鍵字</td><td>單元 4</td></tr>
+</table>
+<h2>部署與自動化 · Deploy &amp; Automate</h2>
+<table><tr><th>名稱</th><th>英文</th><th>說明</th><th>單元</th></tr>
+<tr><td><strong>Pages</strong></td><td>GitHub Pages</td><td>靜態網站免費託管，綁 github.io 網域</td><td>單元 6</td></tr><tr><td><strong>CNAME</strong></td><td>CNAME</td><td>把自訂網域指到你的 Pages 的 DNS 記錄</td><td>單元 6</td></tr><tr><td><strong>.nojekyll</strong></td><td>.nojekyll</td><td>空檔，讓 GitHub 不要用 Jekyll 處理你的 HTML</td><td>單元 6</td></tr><tr><td><strong>Actions</strong></td><td>GitHub Actions</td><td>事件觸發的自動化工作流程</td><td>單元 7</td></tr><tr><td><strong>Workflow</strong></td><td>Workflow</td><td>一個自動化流程（.github/workflows/*.yml）</td><td>單元 7</td></tr><tr><td><strong>Job / Step</strong></td><td>Job / Step</td><td>工作單位 / job 裡的單一步驟</td><td>單元 7</td></tr><tr><td><strong>Action</strong></td><td>Action</td><td>可重用的步驟套件（Marketplace）</td><td>單元 7</td></tr><tr><td><strong>Runner</strong></td><td>Runner</td><td>執行 workflow 的虛擬機環境</td><td>單元 7</td></tr><tr><td><strong>Secrets</strong></td><td>Secrets</td><td>workflow 中的加密機密變數</td><td>單元 7</td></tr><tr><td><strong>Status Check</strong></td><td>Status Check</td><td>把 CI 變成 PR 合併閘門的檢查</td><td>單元 7</td></tr>
+</table>
+<h2>開源 · Open Source</h2>
+<table><tr><th>名稱</th><th>英文</th><th>說明</th><th>單元</th></tr>
+<tr><td><strong>License</strong></td><td>License</td><td>授權條款：決定別人能怎麼用你的程式碼</td><td>單元 8</td></tr><tr><td><strong>CONTRIBUTING</strong></td><td>CONTRIBUTING.md</td><td>告訴貢獻者怎麼參與的規範文件</td><td>單元 8</td></tr><tr><td><strong>CODE_OF_CONDUCT</strong></td><td>CODE_OF_CONDUCT</td><td>社群行為守則（底線與包容）</td><td>單元 8</td></tr><tr><td><strong>Release</strong></td><td>Release</td><td>對外發佈一個版本（含 tag 與說明）</td><td>單元 8</td></tr><tr><td><strong>SemVer</strong></td><td>Semantic Versioning</td><td>主版.次版.修訂 的語意化版本號</td><td>單元 8</td></tr><tr><td><strong>Upstream</strong></td><td>Upstream</td><td>fork 時指回原專案的 remote 暱稱</td><td>單元 8</td></tr><tr><td><strong>Good First Issue</strong></td><td>Good First Issue</td><td>標記「適合新手」的 issue 標籤</td><td>單元 5</td></tr><tr><td><strong>Dependabot</strong></td><td>Dependabot</td><td>自動更新依賴並掃漏洞的內建工具</td><td>單元 8</td></tr><tr><td><strong>gh CLI</strong></td><td>GitHub CLI</td><td>命令列操作 GitHub 的官方工具</td><td>單元 8</td></tr>
+</table>
+</div><footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

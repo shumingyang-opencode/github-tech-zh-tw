@@ -3,103 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>單元 2 · 第一個 Repo · GitHub 繁中教學站</title>
-<meta name="description" content="建立第一個 repo：clone、add/commit/push、README、.gitignore。">
+<title>單元 2 · 第一個 Repo · GitHub 繁體中文教學站</title>
+<meta name="description" content="建立 repo、clone、add/commit/push、README、.gitignore">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
   <h1>單元 2 · 第一個 Repo</h1>
-  <p class="subtitle">建立、複製、提交、上傳 — Your First Repo</p>
+  <p class="subtitle">建立、clone、add/commit/push、README、.gitignore</p>
 </header>
-
 <nav class="topnav">
   <a href="../index.html">首頁</a>
   <a href="../map.html">概念地圖</a>
   <a href="../learning-path.html">學習路線</a>
-  <a href="index.html">單元教學</a>
+  <a href="../docs/index.html">單元教學</a>
+  <a href="../glossary.html">術語表</a>
   <a href="../about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 單元教學</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 單元教學</a></div>
 <div class="guide">
+<h2>2.1 定義：Repo 是什麼</h2>
+<p><strong>Repo（Repository，倉庫）</strong>＝「一個專案」的容器。它包含<strong>程式碼、版本歷史、Issue、PR、Wiki</strong> 等一切。每個 repo 都有一個唯一網址，可以是<strong>公開（public）</strong>或<strong>私有（private）</strong>。</p>
+<div class="callout"><strong>一句話：</strong>Repo = 專案資料夾 ＋ 版本歷史（<code>.git/</code>）＋ GitHub 的服務。</div>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">repo 內部結構 · STRUCTURE</div><pre>hello-world/
+├── .git/          <span class="hl-c"># 版本歷史（隱藏，別亂刪）</span>
+├── README.md      <span class="hl-c"># 專案門面</span>
+├── src/           <span class="hl-c"># 你的程式碼</span>
+└── .gitignore     <span class="hl-c"># 排除清單</span></pre></div>
+  <div class="demo-block"><div class="demo-label">repo 網址 · URL</div><pre>https://github.com/&lt;你&gt;/&lt;repo名&gt;
 
-  <h2>Repo 是什麼</h2>
-  <p>
-    <strong>Repo（Repository）</strong>＝專案倉庫，是 GitHub 上「一個專案」的容器。
-    它包含程式碼、版本歷史、Issue、PR、Wiki 等一切。可以是<strong>公開</strong>（人人可看）或<strong>私有</strong>。
-  </p>
+# clone 用：
+# https://github.com/你/repo名.git
+# git@github.com:你/repo名.git  (SSH)</pre></div>
+</div>
 
-  <h2>流程一：在 GitHub 上建立 repo</h2>
-  <div class="demo-block">
-    <div class="demo-label">網頁操作 · WEB UI</div>
-    <pre>1. 右上角「+」→ New repository
+<h2>2.2 方法一：在 GitHub 網頁上建立 repo</h2>
+<div class="demo-block">
+  <div class="demo-label">網頁操作 · WEB UI</div>
+  <pre>1. 右上角「+」→ New repository
 2. 填名稱（如 hello-world）
 3. 選 Public / Private
-4. 勾選 Add a README（建議）
+4. 可勾選 Add a README（建議新手勾）
 5. 按 Create repository</pre>
-  </div>
-  <div class="callout">
-    <strong>順帶一提：</strong>你現在看的這個教學站，其 repo 就是用這個流程建立的。
-    後面的<a href="unit-06-github-pages.html">單元 6</a>會帶你親手做一次。
-  </div>
+</div>
+<p class="hint">你現在看的教學站，其 repo 就是用這個流程建立的。</p>
 
-  <h2>流程二：Clone 到本機</h2>
-  <p>把 repo 複製到自己的電腦開始開發。HTTPS 網址形如 <code>https://github.com/使用者/repo名.git</code>。</p>
-  <div class="demo-grid">
-    <div class="demo-block">
-      <div class="demo-label">命令 · COMMANDS</div>
-      <pre>git clone https://github.com/you/hello-world.git
-cd hello-world</pre>
-    </div>
-    <div class="demo-block">
-      <div class="demo-label">結果 · RESULT</div>
-      <pre>hello-world/
-├── .git/      <span class="hl-c"># 版本歷史（隱藏）</span>
-└── README.md  <span class="hl-c"># 專案檔案</span></pre>
-    </div>
-  </div>
+<h2>2.3 方法二：用命令列建立</h2>
+<p>裝了 <code>gh</code> CLI 之後，一條指令就能建好 repo 並推上 GitHub（單元 8 會完整介紹 gh）：</p>
+<div class="demo-block">
+  <div class="demo-label">gh 指令 · GH CLI</div>
+  <pre>gh repo create hello-world --public --source=. --push
+<span class="hl-c"># --source=.  以目前資料夾為內容</span>
+<span class="hl-c"># --push      建好後立刻推送</span></pre>
+</div>
 
-  <h2>流程三：改檔 → 提交 → 上傳</h2>
-  <p>Git 的日常循環只有三個步驟，全記住就夠了：</p>
-  <div class="demo-block">
-    <div class="demo-label">日常循環 · THE LOOP</div>
-    <pre>git add .              <span class="hl-c"># 1. 暫存（stage）：挑選要納入的變更</span>
+<h2>2.4 Clone：把 repo 複製到本機</h2>
+<p>要開始開發，把 repo 抓到你自己的電腦：</p>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">命令 · COMMANDS</div><pre>git clone https://github.com/you/hello-world.git
+cd hello-world</pre></div>
+  <div class="demo-block"><div class="demo-label">結果 · RESULT</div><pre>hello-world/
+├── .git/      <span class="hl-c"># 完整版本歷史</span>
+└── README.md</pre></div>
+</div>
+<div class="callout info"><strong>clone vs 下載 ZIP：</strong>clone 會把 <code>.git/</code> 版本歷史一起抓下來，之後能 pull / push；下載 ZIP 只有「目前的檔案」，無法同步。</div>
+
+<h2>2.5 日常循環：add → commit → push</h2>
+<p>Git 的日常只有三步，記住就夠了：</p>
+<div class="demo-block">
+  <div class="demo-label">日常循環 · THE LOOP</div>
+  <pre>git add .              <span class="hl-c"># 1. 暫存（stage）：挑選要納入的變更</span>
 git commit -m "說明"   <span class="hl-c"># 2. 提交（commit）：存成一個版本快照</span>
 git push               <span class="hl-c"># 3. 推送（push）：上傳到 GitHub</span></pre>
-  </div>
-  <table>
-    <tr><th>指令</th><th>作用</th><th>類比</th></tr>
-    <tr><td><code>git add</code></td><td>把變更加入暫存區</td><td>打包要寄的東西</td></tr>
-    <tr><td><code>git commit</code></td><td>存成一個帶說明的版本</td><td>寫郵戳寄出</td></tr>
-    <tr><td><code>git push</code></td><td>把本地版本同步到 GitHub</td><td>快遞送到雲端</td></tr>
-  </table>
-  <div class="callout warn">
-    <strong>commit message 要寫清楚：</strong>給未來的自己與隊友看。好例子：
-    <code>fix: 修正登入頁空白</code>；壞例子：<code>update</code>。
-  </div>
+</div>
+<table>
+<tr><th>指令</th><th>作用</th><th>類比</th></tr>
+<tr><td><code>git add</code></td><td>把變更加入暫存區（staging area）</td><td>打包要寄的東西</td></tr>
+<tr><td><code>git commit</code></td><td>存成一個帶說明的版本</td><td>寫郵戳寄出</td></tr>
+<tr><td><code>git push</code></td><td>把本地版本同步到 GitHub</td><td>快遞送到雲端</td></tr>
+</table>
+<div class="callout warn"><strong>commit message 要寫清楚：</strong>給未來的自己與隊友看。好例子：<code>fix: 修正登入頁空白</code>；壞例子：<code>update</code>、<code>改</code>。</div>
 
-  <h2>首次推送 · First Push</h2>
-  <p>本地建立專案後要接上 GitHub（若你是先 clone 就略過）：</p>
-  <div class="demo-block">
-    <div class="demo-label">從零開始推送 · COMMANDS</div>
-    <pre>git init -b main                    <span class="hl-c"># 初始化，主分支叫 main</span>
+<h2>2.6 首次推送 · First Push（從零開始的 repo）</h2>
+<p>若你是在本機「先有專案、後想上 GitHub」（沒有先 clone），流程是：</p>
+<div class="demo-block">
+  <div class="demo-label">從零開始推送 · COMMANDS</div>
+  <pre>git init -b main                        <span class="hl-c"># 初始化，主分支叫 main</span>
 git add .
 git commit -m "first commit"
 git remote add origin https://github.com/you/hello-world.git
-git push -u origin main             <span class="hl-c"># -u 記住 upstream，之後直接 git push</span></pre>
-  </div>
+git push -u origin main                 <span class="hl-c"># -u 記住 upstream，之後直接 git push</span></pre>
+</div>
+<p class="hint"><code>remote</code>＝「遠端位置」的暱稱，慣例叫 <code>origin</code>；<code>-u</code>（--set-upstream）讓本機記住要推去哪裡。</p>
 
-  <h2>README.md · 專案的門面</h2>
-  <p>README 是訪客第一眼看到的文件（用 Markdown 寫——回顧我們的 <a href="https://shumingyang-opencode.github.io/markdown-tech-zh-tw/" rel="noopener">Markdown 教學站</a>）。</p>
-  <div class="pair">
-    <div class="col-en">
-      <h3>README.md / MINIMAL</h3>
-      <pre># hello-world
+<h2>2.7 README.md · 專案的門面</h2>
+<p>README 是訪客第一眼看到的文件，用 <strong>Markdown</strong> 寫（回顧我們的 <a href="https://shumingyang-opencode.github.io/markdown-tech-zh-tw/" rel="noopener">Markdown 教學站</a>）。夠用的 README 只要四段：</p>
+<div class="pair">
+  <div class="col-en">
+    <h3>README.md / MINIMAL</h3>
+    <pre># hello-world
 
 A demo project.
 
@@ -112,61 +116,60 @@ npm start
 ## License
 
 MIT</pre>
-    </div>
-    <div class="col-zh">
-      <h3>解說 · EXPLAINED</h3>
-      <p><strong># 專案名</strong>：一級標題。</p>
-      <p><strong>一句話簡介</strong>。</p>
-      <p><strong>Usage</strong>：怎麼安裝、怎麼跑。</p>
-      <p><strong>License</strong>：授權（單元 8 詳談）。</p>
-      <p>夠用的 README 就是這四段。</p>
-    </div>
   </div>
+  <div class="col-zh">
+    <h3>解說 · EXPLAINED</h3>
+    <p><strong># 專案名</strong>：一級標題。</p>
+    <p><strong>一句話簡介</strong>：做什麼、解決什麼。</p>
+    <p><strong>Usage</strong>：怎麼安裝、怎麼跑。</p>
+    <p><strong>License</strong>：授權（單元 8 詳談）。</p>
+    <p>四段就是最小可用 README。</p>
+  </div>
+</div>
 
-  <h2>.gitignore · 排除檔案</h2>
-  <p>告訴 Git「哪些檔案不要追蹤」——例如 <code>node_modules</code>、建置產物、本機設定。</p>
-  <div class="demo-block">
-    <div class="demo-label">.gitignore · 範例</div>
-    <pre><span class="hl-k">node_modules/</span>
+<h2>2.8 .gitignore · 排除不要的檔案</h2>
+<p>告訴 Git「哪些檔案不要追蹤」——例如 <code>node_modules</code>、建置產物、本機設定與<strong>機密</strong>：</p>
+<div class="demo-block">
+  <div class="demo-label">.gitignore · 範例</div>
+  <pre><span class="hl-k">node_modules/</span>
 <span class="hl-k">dist/</span>
 <span class="hl-k">.env</span>
 <span class="hl-k">*.log</span>
 <span class="hl-k">.DS_Store</span></pre>
-  </div>
-  <div class="callout warn">
-    <strong>重要：</strong><code>.env</code>、金鑰、Token <strong>務必加入 .gitignore</strong>——一旦 push 上去，
-    就進入了 Git 歷史，刪掉也還在歷史裡。
-  </div>
+</div>
+<div class="callout warn"><strong>最重要的安全習慣：</strong><code>.env</code>、金鑰、Token <strong>務必加入 .gitignore</strong>。一旦 push 上去，它就進入 Git 歷史——就算之後刪掉，「歷史裡還留著」。真的洩漏了，重點不是刪檔，而是<strong>撤銷那個憑證</strong>。</div>
+
+<h2>2.9 Worked Example：完成第一次 push</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">練習 · PRACTICE</div><pre>mkdir my-first-repo &amp;&amp; cd my-first-repo
+git init -b main
+echo "# my-first-repo" &gt; README.md
+git add .
+git commit -m "feat: init repo with README"
+gh repo create my-first-repo --public --source=. --push</pre></div>
+  <div class="demo-block"><div class="demo-label">驗收 · CHECKLIST</div><div class="demo-render">
+    <p>✅ <code>git status</code> 顯示乾淨（nothing to commit）<br>✅ GitHub 上看到 <code>README.md</code><br>✅ 再改一筆 → <code>add / commit / push</code>，GitHub 上歷史多一筆<br>✅ <code>git log --oneline</code> 看得到 commit</p>
+  </div></div>
+</div>
+<div class="callout"><strong>練習：</strong>為你的 repo 建立 <code>.gitignore</code>，把 <code>.env</code>、<code>*.log</code>、<code>node_modules/</code> 排除；再推一筆更新，確認 GitHub 上看不到這些檔案。</div>
 
   <div class="outcome">
-    <strong>看完這頁你應該能說出：</strong>
-    <ul>
-      <li>如何建立、clone、push 一個 repo。</li>
-      <li>add → commit → push 三步循環的意義。</li>
-      <li>好的 commit message 長什麼樣。</li>
-      <li>README 的四段基本結構。</li>
-      <li>為什麼 .env 與金鑰要進 .gitignore。</li>
-    </ul>
+    <strong>看完這單元你應該能說出：</strong>
+    <ul><li>用網頁 UI 與命令列兩種方式建立 repo。</li><li>說出 add → commit → push 三步循環與各自的意義。</li><li>寫出 clone、remote add、push -u 的指令與作用。</li><li>寫出 README 的四段基本結構。</li><li>解釋 .gitignore 為什麼必須排除 .env 與金鑰。</li></ul>
   </div>
 
   <h2>延伸閱讀</h2>
   <ul>
-    <li>下一篇：<a href="unit-03-branches-merge.html">單元 3 · 分支與合併</a>——多人開發的關鍵。</li>
-    <li><a href="https://docs.github.com/en/repositories/creating-and-managing-repositories" rel="noopener">GitHub Docs: Repositories</a></li>
-    <li><a href="https://www.toptal.com/developers/gitignore" rel="noopener">gitignore.io</a>（自動產生 .gitignore）</li>
-  </ul>
+<li>上一篇：<a href="unit-01-github-intro.html">單元 1 · GitHub 是什麼</a>。</li>
+<li>下一篇：<a href="unit-03-branches-merge.html">單元 3 · 分支與合併</a>。</li>
+<li><a href="../glossary.html">術語表</a>：複習全站。</li>
+</ul>
 
-  <div class="next-prev">
+<div class="next-prev">
     <a href="unit-01-github-intro.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 1 · GitHub 是什麼</div></a>
     <a class="np-next" href="unit-03-branches-merge.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 3 · 分支與合併</div></a>
-  </div>
 </div>
-
-<footer>
-  這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
 </div>
-</body>
-</html>
+<footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

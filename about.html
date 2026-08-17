@@ -3,92 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>關於本站 · GitHub 繁中教學站</title>
-<meta name="description" content="關於本站的緣起、授權與建置方式。">
+<title>關於本站 · GitHub 繁體中文教學站</title>
+<meta name="description" content="GitHub 教學站關於頁">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
   <h1>關於本站</h1>
   <p class="subtitle">緣起、授權與建置方式</p>
 </header>
-
 <nav class="topnav">
   <a href="index.html">首頁</a>
   <a href="map.html">概念地圖</a>
   <a href="learning-path.html">學習路線</a>
   <a href="docs/index.html">單元教學</a>
+  <a href="glossary.html">術語表</a>
   <a href="about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 回首頁</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 回首頁</a></div>
 <div class="guide">
   <h2>這個網站是什麼</h2>
-  <p>
-    一份把 <strong>GitHub 平台</strong>從帳號、第一個 repo，教到開源貢獻的繁體中文教學網站。
-    目標讀者是<strong>初階工程師與學生</strong>——你聽過 GitHub，甚至逛過別人的 repo，
-    但想系統性地學會使用它完成真實工作。
-  </p>
-  <p>
-    本站採用<strong>中英對照</strong>：中文解說為主，技術名詞與指令保留英文，
-    讓你同時學會「怎麼做」與「怎麼說」。
-  </p>
-
+  <p>一份把 <strong>GitHub 平台</strong>從帳號、第一個 repo，到開源貢獻做成<strong>中英對照深度教學</strong>的繁體中文網站。目標讀者是<strong>初階工程師與學生</strong>——你聽過 GitHub，甚至逛過別人的 repo，但想系統性地學會使用它完成真實工作。</p>
+  <p>每個單元都採用「<strong>定義/原理 → 教學步驟 → Worked Example → 常見錯誤 → 練習</strong>」的深度結構，並附「看完這單元你應該能說出」的驗收清單。</p>
   <h2>為什麼要學 GitHub</h2>
   <ul>
     <li>現代開發的事實標準——工作、開源、作品集都在這。</li>
     <li>整合版本控制、協作、自動化與部署於一體。</li>
     <li>會 GitHub = 能參與全球任何開源專案。</li>
   </ul>
-
   <h2>本站建置</h2>
   <ul class="timeline">
-    <li>決定主題與課程大綱（8 單元、中英對照、從使用到開源）</li>
+    <li>規劃 8 單元深度課程（認識 → 上手 → 協作 → 自動化 → 開源）</li>
     <li>承襲既有教學站的深色 × 霓虹設計語言與架構慣例</li>
-    <li>建立首頁、概念地圖、學習路線與單元教學架構</li>
-    <li>逐單元撰寫內容，持續擴充與修正</li>
+    <li>每個單元設計「定義/原理 + 步驟 + Worked Example + 練習 + 看完應能說出」結構</li>
+    <li>新增術語表速查頁</li>
   </ul>
-
   <h2>本站本身就是 GitHub 的產物</h2>
-  <p>
-    你正在看的這站，以及 Markdown / YAML / JSON 教學站，都是由 OpenCode 撰寫、
-    用 <code>git</code> 版本管理、推送到 GitHub，再透過 <strong>GitHub Pages</strong> 免費部署上線。
-    學完<a href="docs/unit-06-github-pages.html">單元 6</a>，你也能做到。
-  </p>
-
+  <p>你正在看的這站，以及 Markdown / YAML / JSON 教學站，都是由 OpenCode 撰寫、用 <code>git</code> 版本管理、推送到 GitHub，再透過 <strong>GitHub Pages</strong> 免費部署上線。學完<a href="docs/unit-06-github-pages.html">單元 6</a>，你也能做到。</p>
   <h2>授權</h2>
-  <div class="license-box">
-    <strong>本站教學內容</strong>（繁體中文解說）為本站原創，以
-    <strong>CC-BY-4.0</strong> 授權釋出——歡迎引用、改作、分享，惟需標示來源。
-    <br><br>
-    文中技術名詞與操作引用自
-    <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>
-    與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。
-  </div>
-
+  <div class="license-box"><strong>本站教學內容</strong>（繁體中文解說）為本站原創，以 <strong>CC-BY-4.0</strong> 授權釋出。文中技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</div>
   <h2>技術資訊</h2>
   <div class="file-tree">github-tech-zh-tw/
 ├── index.html            <span class="f">課程總覽</span>
 ├── map.html              <span class="f">概念地圖</span>
 ├── learning-path.html    <span class="f">學習路線</span>
 ├── about.html            <span class="f">關於本站</span>
-├── docs/                 <span class="dir">單元教學</span>
-│   ├── index.html        <span class="f">單元一覽</span>
-│   └── unit-01…08        <span class="f">8 篇教學頁</span>
+├── glossary.html         <span class="f">📖 術語表</span>
+├── docs/                 <span class="dir">8 深度單元</span>
 ├── assets/site.css       <span class="f">單一共享樣式</span>
 └── .nojekyll             <span class="f">GitHub Pages 直出</span></div>
   <p class="hint">本站為純靜態 HTML，無建置步驟，直接部署於 GitHub Pages。</p>
-</div>
-
-<footer>
-  這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
-</div>
-</body>
-</html>
+</div><footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

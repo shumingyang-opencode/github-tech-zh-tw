@@ -3,95 +3,103 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>單元 1 · GitHub 是什麼 · GitHub 繁中教學站</title>
-<meta name="description" content="GitHub 是什麼：Git vs GitHub、平台功能總覽、帳號與認證。">
+<title>單元 1 · GitHub 是什麼 · GitHub 繁體中文教學站</title>
+<meta name="description" content="Git vs GitHub、平台功能總覽、帳號與認證、社群價值">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
   <h1>單元 1 · GitHub 是什麼</h1>
-  <p class="subtitle">Git vs GitHub，平台能幹嘛 — What &amp; Why</p>
+  <p class="subtitle">Git vs GitHub、平台功能、社群價值、帳號設定</p>
 </header>
-
 <nav class="topnav">
   <a href="../index.html">首頁</a>
   <a href="../map.html">概念地圖</a>
   <a href="../learning-path.html">學習路線</a>
-  <a href="index.html">單元教學</a>
+  <a href="../docs/index.html">單元教學</a>
+  <a href="../glossary.html">術語表</a>
   <a href="../about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 單元教學</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 單元教學</a></div>
 <div class="guide">
+<h2>1.1 定義：GitHub 是什麼</h2>
+<p><strong>GitHub</strong> 是一個<strong>程式碼託管與協作平台（code hosting &amp; collaboration platform）</strong>——它託管你用 <strong>Git</strong> 管理的專案，並在之上提供<strong>協作、追蹤、自動化與部署</strong>服務。2008 年上線，如今超過<strong>一億開發者</strong>在上面工作。</p>
+<div class="callout"><strong>一句話：</strong>GitHub = 「用 Git 管的程式碼」＋「放上雲端」＋「加上一群人一起開發的工具」。</div>
+<table>
+<tr><th>對比</th><th>Git</th><th>GitHub</th></tr>
+<tr><td>本質</td><td>版本控制工具</td><td>雲端託管平台</td></tr>
+<tr><td>運行位置</td><td>你的電腦（本機）</td><td>雲端伺服器</td></tr>
+<tr><td>發明</td><td>Linus Torvalds（2005）</td><td>GitHub, Inc.（2008）</td></tr>
+<tr><td>少了它會怎樣</td><td>GitHub 無法運作</td><td>Git 照樣能用（只是單機）</td></tr>
+</table>
 
-  <h2>一句話定義</h2>
-  <p>
-    <strong>GitHub</strong> 是一個<strong>程式碼託管與協作平台</strong>——它託管你用
-    <strong>Git</strong> 管理的專案，並在此之上提供協作、追蹤、自動化與部署服務。
-    你可以把它想成「程式碼的雲端家園」。
-  </p>
-  <div class="demo-grid">
-    <div class="demo-block">
-      <div class="demo-label">Git · 本機工具</div>
-      <pre>git init
+<h2>1.2 Git 與 GitHub 的關係</h2>
+<p>很多人把兩者混為一談，其實它們是<strong>分層合作</strong>的：</p>
+<ul>
+<li><strong>Git</strong>：<strong>分散式版本控制系統（DVCS）</strong>。負責在你本機記錄「每一次變更」，讓你能回到任何一個歷史版本。</li>
+<li><strong>GitHub</strong>：把 Git repo 放到雲端，提供<strong>多人共用的一份中心副本</strong>，加上網頁介面、Issue、PR、Actions 等服務。</li>
+</ul>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">Git · 本機工具</div><pre>git init
 git add .
-git commit -m "first"</pre>
-    </div>
-    <div class="demo-block">
-      <div class="demo-label">GitHub · 雲端平台</div>
-      <pre>git push -u origin main
+git commit -m "first"</pre></div>
+  <div class="demo-block"><div class="demo-label">GitHub · 雲端平台</div><pre>git push -u origin main
 # 之後：Issues、PR、
-# Pages、Actions…</pre>
-    </div>
-  </div>
+# Pages、Actions…</pre></div>
+</div>
+<div class="callout info"><strong>記憶法：</strong>Git 是「引擎」，GitHub 是「車子」——引擎讓車跑，車子讓引擎被人用到。沒有 GitHub，Git 依然能幫你管理檔案；有了 GitHub，Git 才變成「一群人協作」的工具。</div>
 
-  <div class="callout">
-    <strong>關鍵區分：</strong><strong>Git</strong> 是 Linus Torvalds 開發的<strong>版本控制工具</strong>（2005），
-    跑在你的電腦上；<strong>GitHub</strong> 是<strong>網站平台</strong>（2008），
-    讓你把 Git 專案託管上雲、多人協作。沒有 GitHub，Git 照樣能用；有了 GitHub，Git 才變成「團隊的工具」。
-  </div>
+<h2>1.3 GitHub 提供什麼：平台功能地圖</h2>
+<p>GitHub 不是「一個放程式碼的地方」，而是一整套開發工作流。五大核心服務：</p>
+<table>
+<tr><th>功能</th><th>用途</th><th>單元</th></tr>
+<tr><td><strong>Repo 託管</strong></td><td>程式碼雲端備份、版本歷史、分支</td><td><a href="unit-02-first-repo.html">單元 2</a></td></tr>
+<tr><td><strong>Pull Request</strong></td><td>程式碼審查與合併流程</td><td><a href="unit-04-pull-request.html">單元 4</a></td></tr>
+<tr><td><strong>Issues / Projects</strong></td><td>bug 追蹤、任務管理、看板</td><td><a href="unit-05-issues-project.html">單元 5</a></td></tr>
+<tr><td><strong>GitHub Pages</strong></td><td>靜態網站免費部署</td><td><a href="unit-06-github-pages.html">單元 6</a></td></tr>
+<tr><td><strong>GitHub Actions</strong></td><td>CI/CD 自動化</td><td><a href="unit-07-github-actions.html">單元 7</a></td></tr>
+</table>
 
-  <h2>GitHub 能幹嘛</h2>
-  <table>
-    <tr><th>功能</th><th>用途</th><th>單元</th></tr>
-    <tr><td><strong>Repo 託管</strong></td><td>程式碼雲端備份與版本歷史</td><td><a href="unit-02-first-repo.html">單元 2</a></td></tr>
-    <tr><td><strong>Pull Request</strong></td><td>程式碼審查與合併流程</td><td><a href="unit-04-pull-request.html">單元 4</a></td></tr>
-    <tr><td><strong>Issues</strong></td><td>bug 與任務追蹤</td><td><a href="unit-05-issues-project.html">單元 5</a></td></tr>
-    <tr><td><strong>GitHub Pages</strong></td><td>靜態網站免費部署</td><td><a href="unit-06-github-pages.html">單元 6</a></td></tr>
-    <tr><td><strong>Actions</strong></td><td>CI/CD 自動化</td><td><a href="unit-07-github-actions.html">單元 7</a></td></tr>
-    <tr><td><strong>開源生態</strong></td><td>Fork、貢獻、社群</td><td><a href="unit-08-open-source-best-practices.html">單元 8</a></td></tr>
-  </table>
+<h2>1.4 社群價值：為什麼大家都用 GitHub</h2>
+<ol>
+<li><strong>業界標準</strong>：徵才、作品集、公司內部，無處不在。</li>
+<li><strong>開源入口</strong>：全球最大的程式碼社群——你眼前的教學站也開源在 GitHub。</li>
+<li><strong>可回溯、可審查</strong>：每一行程式碼的歷史與討論都有記錄。</li>
+<li><strong>免費額度充足</strong>：公開 repo 免費；私有 repo 也有免費方案。</li>
+<li><strong>生態系</strong>：Actions、Copilot、Codespaces、Marketplace 一應俱全。</li>
+</ol>
 
-  <h2>為什麼值得學</h2>
-  <ul>
-    <li><strong>業界標準</strong>：超過一億開發者使用，徵才時是作品集。</li>
-    <li><strong>完整工作流</strong>：從寫程式到上線，一站到底。</li>
-    <li><strong>免費</strong>：公開 repo 完全免費，私有 repo 也有免費額度。</li>
-    <li><strong>開源入口</strong>：參與全世界最大的程式碼社群。</li>
-  </ul>
+<h2>1.5 帳號與認證 · Authentication</h2>
+<p>註冊後，你的 repo 網址形如 <code>https://github.com/你的帳號/repo名</code>。連上 GitHub 有三種認證方式：</p>
+<table>
+<tr><th>方式</th><th>原理</th><th>適合</th></tr>
+<tr><td><strong>HTTPS + PAT</strong></td><td>Personal Access Token 當密碼</td><td>最常見、容易設定</td></tr>
+<tr><td><strong>SSH key</strong></td><td>一對公私鑰，免密碼</td><td>長期使用、最安全</td></tr>
+<tr><td><strong>gh CLI</strong></td><td>命令列登入，同時管理認證</td><td>重度命令列使用者</td></tr>
+</table>
+<div class="callout warn"><strong>Token 安全紅線：</strong>Token / 金鑰<strong>永遠不要</strong>提交進 repo 或寫在程式碼裡。萬一洩漏：① 到 GitHub Settings → Developer settings 立即<strong>撤銷（revoke）</strong>；② 若已進 Git 歷史，用 <code>git filter-repo</code> 清理（見<a href="unit-08-open-source-best-practices.html">單元 8</a>）。</div>
 
-  <h2>帳號與認證 · Authentication</h2>
-  <p>三種連線 GitHub 的方式：</p>
-  <table>
-    <tr><th>方式</th><th>說明</th></tr>
-    <tr><td><strong>HTTPS + PAT</strong></td><td>用 Personal Access Token（個人存取權杖）當密碼，最常見</td></tr>
-    <tr><td><strong>SSH key</strong></td><td>一對金鑰免密碼，安全且長久</td></tr>
-    <tr><td><strong>gh CLI</strong></td><td>命令列登入，同時管理認證（單元 8）</td></tr>
-  </table>
-  <div class="callout warn">
-    <strong>安全：</strong>永遠不要在程式碼或 repo 裡提交密碼、Token、金鑰。
-    洩漏的 Token 要立即到 GitHub Settings 撤銷。詳細安全見單元 8。
-  </div>
+<h2>1.6 Worked Example：從註冊到第一次 push</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">步驟 · STEPS</div><pre>1. 到 github.com 註冊帳號（選 username）
+2. Settings → Developer settings → PAT
+   → 產生並複製（只顯示一次！）
+3. 本機設定身份
+   git config --global user.name "你的名字"
+   git config --global user.email "你的email"
+4. 建立測試 repo 並 push（詳見單元 2）</pre></div>
+  <div class="demo-block"><div class="demo-label">驗收 · CHECKLIST</div><div class="demo-render">
+    <p>✅ 能登入 github.com<br>✅ 已產生 PAT 或 SSH key<br>✅ <code>git config --list</code> 看得到身份<br>✅ 成功 push 過一次<br>✅ 知道 Token 該存在哪裡（密碼管理員）</p>
+  </div></div>
+</div>
+<p class="hint">實作上，<code>gh auth login</code>（單元 8）一次就搞定 PAT + 身份設定，新手最推薦。</p>
 
-  <h2>認識 GitHub 的介面</h2>
-  <p>進入任何 repo 頁面，先認得這幾個區塊：</p>
-  <div class="demo-block">
-    <div class="demo-label">Repo 頁面佈局 · LAYOUT</div>
-    <pre>┌─────────────────────────────────────┐
+<h2>1.7 認識 GitHub 的介面</h2>
+<p>進入任何 repo 頁面，先認得這幾個區塊——以後每個單元都會用到：</p>
+<div class="demo-block">
+  <div class="demo-label">Repo 頁面佈局 · LAYOUT</div>
+  <pre>┌─────────────────────────────────────┐
 │  <span class="hl-k">owner/repo</span>    ⭐ ★  | Code Issues PRs │
 ├─────────────────────────────────────┤
 │  main ▼   add file ▼   commit 歷史   │
@@ -101,36 +109,34 @@ git commit -m "first"</pre>
 └─────────────────────────────────────┘
 標籤頁：Code / Issues / Pull requests /
         Actions / Projects / Wiki</pre>
-  </div>
+</div>
+<ul>
+<li><strong>Code</strong>：檔案樹與 README（單元 2）。</li>
+<li><strong>Issues / Pull requests</strong>：任務與審查（單元 4、5）。</li>
+<li><strong>Actions</strong>：CI/CD 執行狀態（單元 7）。</li>
+<li><strong>Star / Fork</strong>：收藏與複製別人的 repo（單元 8）。</li>
+</ul>
+
+<h2>1.8 常見錯誤與陷阱</h2>
+<div class="callout warn"><strong>最常見的誤解：</strong>以為「Git = GitHub」。面試與文件常考兩者差別——Git 是工具、GitHub 是平台，一定要能分清楚。</div>
+<div class="callout warn"><strong>用「帳號密碼」push 卻一直失敗：</strong>GitHub 於 2021 年後<strong>不再接受密碼</strong>做 git push，一律要用 <strong>PAT</strong> 或 SSH。密碼驗證失敗時，記得改用 Token。</div>
+<div class="callout"><strong>練習：</strong>在本機執行 <code>git --version</code>；若沒安裝，到 git-scm.com 下載。然後設定你的 <code>user.name</code> / <code>user.email</code>，為單元 2 做準備。</div>
 
   <div class="outcome">
-    <strong>看完這頁你應該能說出：</strong>
-    <ul>
-      <li>Git 與 GitHub 的關係與差別。</li>
-      <li>GitHub 的五大核心功能。</li>
-      <li>三種認證方式與 Token 安全觀念。</li>
-      <li>repo 頁面的基本佈局。</li>
-    </ul>
+    <strong>看完這單元你應該能說出：</strong>
+    <ul><li>說出 Git 與 GitHub 的關係與差別（本機工具 vs 雲端平台）。</li><li>列舉 GitHub 的五大核心服務，並把每個服務對應到單元。</li><li>解釋 GitHub 的社群價值，以及為什麼業界把它當成標準。</li><li>完成帳號註冊，並選一種認證方式（PAT / SSH / gh CLI）。</li><li>說出三種認證方式的差別，以及 Token 洩漏時的正確處理。</li></ul>
   </div>
 
   <h2>延伸閱讀</h2>
   <ul>
-    <li>下一篇：<a href="unit-02-first-repo.html">單元 2 · 第一個 Repo</a>——動手建立第一個專案。</li>
-    <li><a href="https://docs.github.com/en/get-started/start-your-journey" rel="noopener">GitHub: Start your journey</a></li>
-    <li><a href="https://git-scm.com/book/zh/v2" rel="noopener">Pro Git（繁體中文版）</a></li>
-  </ul>
+<li>下一篇：<a href="unit-02-first-repo.html">單元 2 · 第一個 Repo</a>。</li>
+<li><a href="../glossary.html">術語表</a>：複習全站。</li>
+</ul>
 
-  <div class="next-prev">
-    <a href="index.html"><div class="np-label">← 上一層</div><div class="np-name">單元教學目錄</div></a>
+<div class="next-prev">
     <a class="np-next" href="unit-02-first-repo.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 2 · 第一個 Repo</div></a>
-  </div>
 </div>
-
-<footer>
-  這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
 </div>
-</body>
-</html>
+<footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

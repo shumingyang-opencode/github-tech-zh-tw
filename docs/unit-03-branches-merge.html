@@ -3,140 +3,151 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>單元 3 · 分支與合併 · GitHub 繁中教學站</title>
-<meta name="description" content="GitHub 分支與合併：branch、merge、pull、衝突處理。">
+<title>單元 3 · 分支與合併 · GitHub 繁體中文教學站</title>
+<meta name="description" content="分支原理、branch/checkout、merge、pull、衝突處理">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
   <h1>單元 3 · 分支與合併</h1>
-  <p class="subtitle">平行開發、整合與衝突 — Branches &amp; Merge</p>
+  <p class="subtitle">branch、checkout、merge、衝突解決</p>
 </header>
-
 <nav class="topnav">
   <a href="../index.html">首頁</a>
   <a href="../map.html">概念地圖</a>
   <a href="../learning-path.html">學習路線</a>
-  <a href="index.html">單元教學</a>
+  <a href="../docs/index.html">單元教學</a>
+  <a href="../glossary.html">術語表</a>
   <a href="../about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 單元教學</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 單元教學</a></div>
 <div class="guide">
-
-  <p>
-    多人開發不可能都直接改 main。用<strong>分支（branch）</strong>各自開發，再<strong>合併（merge）</strong>回主線——
-    這是 Git 最重要的設計。
-  </p>
-
-  <h2>分支是什麼 · Branches</h2>
-  <p>分支是「平行開發的軌道」：每個分支有各自的歷史，互不干擾，最後再合併。</p>
-  <div class="demo-block">
-    <div class="demo-label">分支示意 · DIAGRAM</div>
-    <pre>main:     o──o──────────o──────o
+<h2>3.1 為什麼需要分支</h2>
+<p>多人開發不可能都直接改 main——不然 A 改到一半，B 的變更就疊上來，亂成一團。<strong>分支（branch）</strong>讓每個人、每個功能在<strong>平行的軌道</strong>上開發，互不干擾，最後再<strong>合併（merge）</strong>回主線。</p>
+<div class="demo-block">
+  <div class="demo-label">分支示意 · DIAGRAM</div>
+  <pre>main:     o──o──────────o──────o
                \        / 合併
 feature:        o──o──o
 
-主線（main）永遠是「穩定可用」；功能在 feature 開發，完成後合併回 main。</pre>
-  </div>
+主線（main）永遠「穩定可用」；功能在 feature 開發，完成後合併回 main。</pre>
+</div>
+<div class="callout"><strong>核心原則：</strong>main 要保持「隨時可部署」；一切新東西都先放分支。</div>
 
-  <h2>分支操作 · Branch Commands</h2>
-  <div class="demo-block">
-    <div class="demo-label">常用指令 · COMMANDS</div>
-    <pre>git branch <span class="hl-s">feature-login</span>      <span class="hl-c"># 建立分支</span>
-git checkout <span class="hl-s">feature-login</span>   <span class="hl-c"># 切換到該分支</span>
-git checkout -b <span class="hl-s">feature-x</span>     <span class="hl-c"># 建立並切換（最常用）</span>
-git branch                  <span class="hl-c"># 列出所有分支</span>
-git branch -d <span class="hl-s">feature-x</span>      <span class="hl-c"># 刪除分支</span></pre>
-  </div>
-  <div class="callout info">
-    <strong>命名慣例：</strong>分支名用「斜線語意」：<code>feature/login</code>、<code>fix/typo</code>、
-    <code>chore/deps</code>——一看就知道這條分支在幹嘛。
-  </div>
+<h2>3.2 原理：分支只是「指向 commit 的指標」</h2>
+<p>Git 的歷史是一條<strong>commit 鏈</strong>。分支本質上只是<strong>一個會移動的指標（pointer）</strong>，指向某個 commit；<code>HEAD</code> 則指向「你現在站在哪個分支」。所以建立分支<strong>幾乎零成本</strong>——只是做個書籤。</p>
+<div class="demo-block">
+  <div class="demo-label">概念 · CONCEPT</div>
+  <pre>o──o──o──o──o            (main)
+        └─────o──o        (feature)
 
-  <h2>合併 · Merge</h2>
-  <p>把某分支的變更併進目前所在分支。</p>
-  <div class="demo-block">
-    <div class="demo-label">合併流程 · COMMANDS</div>
-    <pre>git checkout <span class="hl-s">main</span>              <span class="hl-c"># 回到主線</span>
-git pull                    <span class="hl-c"># 先取得最新</span>
-git merge <span class="hl-s">feature-login</span>    <span class="hl-c"># 把功能分支合併進來</span>
-git push                    <span class="hl-c"># 上傳合併結果</span></pre>
-  </div>
+HEAD → feature（目前正在 feature 上工作）
+main  → 仍停在「分叉前」的 commit</pre>
+</div>
+<div class="callout info"><strong>這解釋了為什麼</strong>切換分支那麼快、那麼安全——你只是移動書籤，不是複製檔案。Git 之所以強，就強在「歷史是 DAG、分支是書籤」。</div>
 
-  <h2>Pull · 同步他人變更</h2>
-  <p>團隊協作時，動手前先 <code>git pull</code> 拿別人推的新東西。</p>
-  <div class="demo-block">
-    <div class="demo-label">Pull 的意義 · EXPLAINED</div>
-    <pre>git pull = git fetch + git merge
-  fetch：把 GitHub 的資料抓下來
-  merge：併入你的目前分支</pre>
-  </div>
-  <div class="callout warn">
-    <strong>好習慣：</strong>每次開始工作前 <code>git pull</code>，能大幅減少後面的衝突。
-  </div>
+<h2>3.3 分支操作指令</h2>
+<div class="demo-block">
+  <div class="demo-label">常用指令 · COMMANDS</div>
+  <pre>git branch feature-login      <span class="hl-c"># 建立分支</span>
+git checkout feature-login    <span class="hl-c"># 切換到該分支</span>
+git checkout -b feature-x     <span class="hl-c"># 建立並切換（最常用）</span>
+git branch                    <span class="hl-c"># 列出所有分支（* 標示目前位置）</span>
+git branch -a                 <span class="hl-c"># 連遠端分支一起列</span>
+git branch -d feature-x       <span class="hl-c"># 刪除已合併的分支</span></pre>
+</div>
+<div class="callout info"><strong>命名慣例：</strong>用「斜線語意」一眼看懂用途——<code>feature/login</code>、<code>fix/typo</code>、<code>chore/deps</code>、<code>docs/readme</code>。</div>
 
-  <h2>衝突 · Conflicts</h2>
-  <p>當兩邊<strong>改了同一行程式碼</strong>，Git 不知道該留哪邊，就會產生衝突——需要你<strong>手動解決</strong>。</p>
-  <div class="demo-block">
-    <div class="demo-label">衝突標記 · CONFLICT MARKS</div>
-    <pre><span class="hl-c">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>          <span class="hl-c"># 目前分支的版本</span>
+<h2>3.4 合併 · Merge</h2>
+<p>把某分支的變更併進「目前所在的分支」。Git 會試著自動合併；只有兩邊<strong>改了同一行</strong>才需要你出手。</p>
+<div class="demo-block">
+  <div class="demo-label">合併流程 · COMMANDS</div>
+  <pre>git checkout main              <span class="hl-c"># 回到主線</span>
+git pull                       <span class="hl-c"># 先取得最新（好習慣）</span>
+git merge feature-login        <span class="hl-c"># 把功能分支合併進來</span>
+git push                       <span class="hl-c"># 上傳合併結果</span></pre>
+</div>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">成功合併 · NO CONFLICT</div><div class="demo-render">
+    <p>✅ <code>Merge made by the 'ort' strategy.</code><br>兩邊改的是「不同檔案 / 不同區段」→ Git 自動完成。</p>
+  </div></div>
+  <div class="demo-block"><div class="demo-label">衝突 · CONFLICT</div><div class="demo-render">
+    <p>⚠️ <code>CONFLICT (content): Merge conflict in app.py</code><br>兩邊改了同一行 → 需要你手動解決。</p>
+  </div></div>
+</div>
+
+<h2>3.5 Pull：fetch + merge</h2>
+<p>團隊協作時，動手前先 <code>git pull</code> 拿別人推的新東西。<code>git pull</code> 其實是兩步的縮寫：</p>
+<div class="demo-block">
+  <div class="demo-label">Pull 的意義 · EXPLAINED</div>
+  <pre>git pull = git fetch + git merge
+   fetch：把 GitHub 的資料抓下來（不影響工作區）
+   merge：併入你的目前分支</pre>
+</div>
+<div class="callout warn"><strong>好習慣：</strong>每次開始工作前 <code>git pull</code>，能大幅減少後面的衝突——這是最便宜、最有效的協作規矩。</div>
+
+<h2>3.6 衝突 · Conflict 的產生與解決</h2>
+<p>當兩邊<strong>改了同一行程式碼</strong>，Git 不知道該留哪邊，就產生衝突——這<strong>不是錯誤</strong>，是 Git 在請你「做人工判斷」。先看懂標記：</p>
+<div class="demo-block">
+  <div class="demo-label">衝突標記 · CONFLICT MARKS</div>
+  <pre><span class="hl-c">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>          <span class="hl-c"># 目前分支（main）的版本</span>
 price = 100
 <span class="hl-c">=======</span>                 <span class="hl-c"># 分隔線</span>
 price = 120
 <span class="hl-c">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature-x</span>    <span class="hl-c"># 被合併分支的版本</span></pre>
-  </div>
-  <p>解決步驟：</p>
-  <ol>
-    <li>打開有衝突的檔案，看到 <code>&lt;&lt;&lt; &gt;&gt;&gt;</code> 標記。</li>
-    <li>決定保留哪邊（或兩邊都留），刪掉標記行。</li>
-    <li><code>git add</code> 該檔案 → <code>git commit</code> 完成合併。</li>
-  </ol>
-  <div class="callout">
-    <strong>衝突不是壞事：</strong>代表兩個人都改了同一處——「必須人工判斷」是正常的。
-    維持小 commit、頻繁 pull，衝突就會又少又好解。
-  </div>
+</div>
+<p>解決步驟：</p>
+<ol>
+<li>打開衝突檔案，找到 <code>&lt;&lt;&lt;</code> / <code>&gt;&gt;&gt;</code> 標記。</li>
+<li>決定保留哪邊（或兩邊都留），<strong>刪掉三行標記</strong>。</li>
+<li><code>git add</code> 該檔案。</li>
+<li><code>git commit</code> 完成合併（不要自己寫 merge message 也行，Git 會給預設）。</li>
+</ol>
+<div class="callout"><strong>衝突不是壞事：</strong>代表兩個人都動了同一處——「必須人工判斷」是正常的。維持<strong>小 commit</strong>、<strong>頻繁 pull</strong>、<strong>同一區域少人同時改</strong>，衝突就會又少又好解。</div>
 
-  <h2>合併後上 GitHub · Push</h2>
-  <p>把本地分支推到 GitHub：</p>
-  <div class="demo-block">
-    <div class="demo-label">推分支 · COMMANDS</div>
-    <pre>git push -u origin feature-login   <span class="hl-c"># 第一次推新分支</span>
+<h2>3.7 把分支推上 GitHub</h2>
+<div class="demo-block">
+  <div class="demo-label">推分支 · COMMANDS</div>
+  <pre>git push -u origin feature-login   <span class="hl-c"># 第一次推新分支</span>
 git push                           <span class="hl-c"># 之後直接推</span></pre>
-  </div>
-  <p class="hint">推到 GitHub 後，下一步通常就是開一個 <strong>Pull Request</strong>——下一單元的主題。</p>
+</div>
+<p class="hint">推到 GitHub 後，下一步通常就是開一個 <strong>Pull Request</strong>——下一單元的主題。</p>
+
+<h2>3.8 Worked Example：完整分支開發</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">練習 · PRACTICE</div><pre>git checkout -b feature/greeting
+echo "print('hello')" &gt;&gt; app.py
+git add app.py
+git commit -m "feat: add greeting"
+git checkout main
+git pull
+git merge feature/greeting
+git push
+git branch -d feature/greeting   <span class="hl-c"># 合併完可刪</span></pre></div>
+  <div class="demo-block"><div class="demo-label">驗收 · ACCEPT</div><div class="demo-render">
+    <p>✅ 分支建立／切換成功<br>✅ main 合併後含新內容<br>✅ <code>git log --graph --oneline</code> 看得到合併<br>✅ 已刪除合併完的分支</p>
+  </div></div>
+</div>
+<div class="callout"><strong>進階練習：</strong>故意製造一次衝突——在兩個分支分別把 <code>app.py</code> 同一行改成不同值，再 merge，練習走完「看標記 → 人工判斷 → add → commit」四步。</div>
 
   <div class="outcome">
-    <strong>看完這頁你應該能說出：</strong>
-    <ul>
-      <li>為什麼需要分支、分支的命名慣例。</li>
-      <li>建立 / 切換 / 合併分支的指令。</li>
-      <li>Pull 的意義與好習慣。</li>
-      <li>衝突長什麼樣、如何手動解決。</li>
-    </ul>
+    <strong>看完這單元你應該能說出：</strong>
+    <ul><li>解釋分支的原理（指向 commit 的指標）與為什麼需要分支。</li><li>寫出建立、切換、列出、刪除分支的指令。</li><li>說出 merge、pull（fetch + merge）的意義與關係。</li><li>看懂衝突標記並獨立完成一次衝突解決。</li><li>遵守「動手前先 pull、小步提交」的協作好習慣。</li></ul>
   </div>
 
   <h2>延伸閱讀</h2>
   <ul>
-    <li>下一篇：<a href="unit-04-pull-request.html">單元 4 · Pull Request 協作</a>——把分支變成審查流程。</li>
-    <li><a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-branches" rel="noopener">GitHub Docs: About branches</a></li>
-  </ul>
+<li>上一篇：<a href="unit-02-first-repo.html">單元 2 · 第一個 Repo</a>。</li>
+<li>下一篇：<a href="unit-04-pull-request.html">單元 4 · Pull Request 協作</a>。</li>
+<li><a href="../glossary.html">術語表</a>：複習全站。</li>
+</ul>
 
-  <div class="next-prev">
+<div class="next-prev">
     <a href="unit-02-first-repo.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 2 · 第一個 Repo</div></a>
     <a class="np-next" href="unit-04-pull-request.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 4 · Pull Request 協作</div></a>
-  </div>
 </div>
-
-<footer>
-  這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
 </div>
-</body>
-</html>
+<footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>
