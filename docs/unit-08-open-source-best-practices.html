@@ -171,6 +171,117 @@ gh pr merge 123 --squash    <span class="hl-c"># 用 squash 合併</span></pre>
 <div class="next-prev">
     <a href="unit-07-github-actions.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 7 · GitHub Actions</div></a>
 </div>
+<h2>8.11 進階真實情境 Worked Example：從 Fork 到上游合併的完整開源貢獻</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">情境 · SCENARIO</div><pre>你要為一個熱門開源專案（如 VS Code）貢獻一個功能：
+1. Fork + clone
+2. 建立開發環境
+3. 開分支開發
+4. 同步上游最新
+5. 開 PR + 回覆 review
+6. 合併後清理</pre></div>
+  <div class="demo-block"><div class="demo-label">完整操作 · COMMANDS</div><pre><span class="hl-c"># 1. Fork（用 gh CLI）</span>
+gh repo fork microsoft/vscode --clone
+
+<span class="hl-c"># 2. 加上游 remote</span>
+cd vscode
+git remote add upstream \
+  https://github.com/microsoft/vscode.git
+git remote -v
+<span class="hl-c"># origin    → 你的 fork</span>
+<span class="hl-c"># upstream  → 原專案</span>
+
+<span class="hl-c"># 3. 建立開發分支</span>
+git checkout -b feature/new-snippet-language
+
+<span class="hl-c"># 4. 開發（以小步提交）</span>
+git add src/vs/editor/contrib/snippet/
+git commit -m "feat: add rust snippet support"
+
+<span class="hl-c"># 5. 同步上游（開發前做）</span>
+git fetch upstream
+git rebase upstream/main
+<span class="hl-c"># 衝突？解完後 git rebase --continue</span>
+
+<span class="hl-c"># 6. 推送到你的 fork</span>
+git push origin feature/new-snippet-language
+
+<span class="hl-c"># 7. 開 PR（用 gh CLI）</span>
+gh pr create \
+  --repo microsoft/vscode \
+  --title "feat: Add Rust language snippets" \
+  --body "$(cat <<'EOF'
+## Description
+Adds Rust language snippet definitions.
+
+## Changes
+- New file: `rust.json` snippet definitions
+- Updated language configuration
+
+## Testing
+- Verified snippets appear in VS Code
+- No linting errors
+
+Closes #99999
+EOF
+)" \
+  --reviewer username1,username2
+
+<span class="hl-c"># 8. 回覆 review 意見</span>
+gh pr comment 12345 --body "Thanks for the review! Updated in commit abc123."
+
+<span class="hl-c"># 9. 合併後清理</span>
+git checkout main
+git pull upstream main
+git branch -d feature/new-snippet-language
+git push origin --delete feature/new-snippet-language</pre></div>
+</div>
+<div class="callout info"><strong>為什麼選這個方法：</strong>gh CLI 讓你在終端機完成整個貢獻流程——不用切到瀏覽器、不用手動填表單。同步上游（fetch + rebase）確保你的 PR 基於最新程式碼，減少衝突機率。最後清理遠端分支是「禮貌」——維護者不用看到你已合併的舊分支。</div>
+
+<h2>8.12 深入原理擴充</h2>
+<div class="demo-block">
+  <div class="demo-label">開源安全鏈</div>
+  <pre>程式碼安全 · SECURITY CHAIN
+├── Commit Signing（GPG / SSH）
+│   └── git commit -S → 簽署 commit，防偽造
+│
+├── Secret Scanning（GitHub 內建）
+│   └── 掃描 repo 中洩漏的 Token / API Key
+│
+├── Dependabot Alerts
+│   └── 掃描相依套件的已知漏洞 → 自動開 PR 修復
+│
+├── Code Scanning（CodeQL）
+│   └── 靜態分析程式碼 → 偵測 SQL injection、XSS 等
+│
+└── Supply Chain Security
+    └── SLSA（Supply-chain Levels for Software Artifacts）
+        → 確保 build → release 流程不可竄改</pre>
+</div>
+<ul>
+  <li><strong>Commit Signing</strong>：用 <code>git commit -S</code> 加上 GPG/SSH 簽署，GitHub 會在 commit 旁顯示「Verified」標記。保護分支可設定「Require signed commits」。</li>
+  <li><strong>Dependabot</strong>：自動掃描 <code>package.json</code>、<code>requirements.txt</code> 等的相依套件，發現漏洞時自動開 PR 升級——你只需要 Review + Merge。</li>
+  <li><strong>git filter-repo</strong>：清理 Git 歷史中的敏感資料（Token、密碼）的官方工具。比 <code>git filter-branch</code> 快 10-100 倍且更安全。使用前<strong>一定要備份</strong>。</li>
+  <li><strong>OSSF Scorecard</strong>：GitHub 的開源專案安全評分工具，從 CI、測試、授權、漏洞管理等維度打分——可作為貢獻前的評估依據。</li>
+</ul>
+
+<h2>8.13 診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td><code>gh pr create</code> 回 422 Unprocessable Entity</td><td>標題或描述缺少必要欄位</td><td>確認 <code>--title</code> 和 <code>--body</code> 已提供；檢查 repo 是否有 PR template</td></tr>
+<tr><td>Fork 後找不到上游 repo</td><td>未設定 upstream remote</td><td><code>git remote add upstream https://github.com/原作者/repo.git</code></td</tr>
+<tr><td>PR 被維護者關閉但沒合併</td><td>不符合專案需求或有更簡單的解法</td><td>禮貌地在 PR 留言詢問原因；從經驗中學習</td></tr>
+<tr><td><code>git filter-repo</code> 顯示找不到</td><td>未安裝</td><td><code>pip install git-filter-repo</code> 或 <code>brew install git-filter-repo</code></td></tr>
+<tr><td>Release tag 沒顯示在 GitHub</td><td>只在本機建了 tag，沒 push</td><td><code>git push origin --tags</code></td></tr>
+</table>
+
+<h2>8.14 進階挑戰題</h2>
+<ol>
+  <li>找一個有 <code>good first issue</code> 標籤的開源專案，走完「Fork → 開發 → 上游同步 → PR → Review → 合併」完整流程。記錄每一步遇到的坑和心得。</li>
+  <li>為你自己的專案設定完整的安全鏈：啟用 Secret Scanning、Dependabot、Code Scanning，並在保護分支上要求 signed commits。寫一份 200 字的「安全設定報告」。</li>
+  <li>研究 GitHub 的 <strong>Sponsor</strong> 功能和 <strong>FUNDING.yml</strong>，為你的開源專案設定贊助管道（即使只是放一個「Buy me a coffee」連結）。寫一段說明為什麼開源維護者值得被支持。</li>
+</ol>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

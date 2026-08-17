@@ -169,6 +169,107 @@ gh repo create my-first-repo --public --source=. --push</pre></div>
     <a href="unit-01-github-intro.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 1 · GitHub 是什麼</div></a>
     <a class="np-next" href="unit-03-branches-merge.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 3 · 分支與合併</div></a>
 </div>
+<h2>2.10 進階真實情境 Worked Example：Monorepo 初始化 + Git LFS + 進階 .gitignore</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">情境 · SCENARIO</div><pre>你要建立一個「全端專案」 repo：
+- frontend/（React，大量 node_modules）
+- backend/（Python，有 .env 和模型檔案）
+- docs/（Markdown 教學文件）
+- assets/（含 200MB 影片檔案）
+- 需要用 Git LFS 追蹤大檔</pre></div>
+  <div class="demo-block"><div class="demo-label">完整操作 · COMMANDS</div><pre><span class="hl-c"># 1. 初始化並建立目錄結構</span>
+mkdir fullstack-project && cd fullstack-project
+git init -b main
+
+<span class="hl-c"># 2. 安裝 Git LFS</span>
+git lfs install
+
+<span class="hl-c"># 3. 設定 LFS 追蹤大檔</span>
+git lfs track "*.mp4"
+git lfs track "*.zip"
+git lfs track "*.psd"
+echo ".gitattributes" >> .gitignore
+
+<span class="hl-c"># 4. 建立 .gitignore（進階）</span>
+cat > .gitignore << 'EOF'
+# Node
+node_modules/
+dist/
+.next/
+
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+
+# 大檔（由 LFS 管理）
+*.mp4
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+EOF
+
+<span class="hl-c"># 5. 建立 .env.example（提醒團隊）</span>
+echo "DATABASE_URL=postgres://..." > .env.example
+
+<span class="hl-c"># 6. 首次提交</span>
+git add .
+git commit -m "chore: init monorepo with LFS and gitignore"
+
+<span class="hl-c"># 7. 建立遠端 repo 並推送</span>
+gh repo create TechCo/fullstack-project \
+  --private --source=. --push
+
+<span class="hl-c"># 8. 驗證 LFS 生效</span>
+git lfs ls-files</pre></div>
+</div>
+<div class="callout info"><strong>為什麼選這個方法：</strong>大型專案不能裸衝——先建好 .gitignore 防止敏感資訊洩漏，再用 Git LFS 追蹤大檔避免 repo 膨脹（repo 超過 1GB 會被 GitHub 警告）。.env.example 讓新人知道需要哪些環境變數，不用到處問人。</div>
+
+<h2>2.11 深入原理擴充</h2>
+<div class="demo-block">
+  <div class="demo-label">Git 內部結構 · PLUMBING</div>
+  <pre>git add → 暫存區（Staging Area / Index）
+  └── 寫入 .git/index（二進位檔案，追蹤哪些 blob 要提交）
+
+git commit → 提交對象
+  └── 寫入 .git/objects/（blob + tree + commit 物件）
+  └── 更新 .git/refs/heads/main（分支指標移到新 commit）
+
+git push → 網路傳輸
+  └── 用 packfile 格式壓縮差異物件
+  └── 透過 HTTPS (Git Smart HTTP) 或 SSH 傳到 GitHub
+  └── GitHub 端寫入 bare repo + 觸發 Webhook</pre>
+</div>
+<ul>
+  <li><strong>Packfile</strong>：Git 不是一個一個物件傳，而是把多個物件壓成一個 packfile，傳輸效率比逐個物件快 10 倍以上。</li>
+  <li><strong>Dangling Objects</strong>：<code>git gc</code>（garbage collection）會清除沒有被任何分支或 tag 指向的物件。未 push 的 commit 仍會被保留（除非你 <code>git gc --prune=now</code>）。</li>
+  <li><strong>.gitignore 的坑</strong>：如果檔案已經被追蹤了，再加入 .gitignore「不會生效」——你必須先 <code>git rm --cached</code> 取消追蹤。</li>
+</ul>
+
+<h2>2.12 診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td><code>fatal: destination path already exists</code></td><td>目錄已存在</td><td>先 <code>rm -rf repo名</code> 或改名；或改用 <code>git clone</code>（不要自己 mkdir）</td></tr>
+<tr><td>push 後 README 沒更新</td><td>用了 <code>git push --force</code> 覆蓋遠端</td><td>確認 <code>git log --oneline</code>；用 <code>git revert</code> 回滾（非 force push）</td></tr>
+<tr><td>.gitignore 的檔案仍出現在 repo</td><td>該檔案已被追蹤</td><td><code>git rm --cached 檔名</code> → <code>git commit</code> → <code>git push</code></td></tr>
+<tr><td><code>error: failed to push some refs</code></td><td>遠端有你本機沒有的 commit</td><td><code>git pull --rebase origin main</code> 先同步再推</td></tr>
+<tr><td>Git LFS 檔案顯示為文字指標</td><td>未執行 <code>git lfs pull</code></td><td><code>git lfs install && git lfs pull</code></td></tr>
+</table>
+
+<h2>2.13 進階挑戰題</h2>
+<ol>
+  <li>建立一個 repo，裡面含一個 150MB 的 ZIP 檔。用 Git LFS 追蹤它，push 到 GitHub，再在另一台機器 clone，驗證 <code>git lfs ls-files</code> 顯示正確大小。</li>
+  <li>設計一份「新手入門 .gitignore」，涵蓋 Node.js、Python、Go、Rust 四種語言的常見排除項目，寫成 50 行以內的說明文件。</li>
+  <li>研究 <code>git push --force</code> 與 <code>git push --force-with-lease</code> 的差異，實際用兩個分支模擬場景：為什麼 force-with-lease 更安全？</li>
+</ol>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

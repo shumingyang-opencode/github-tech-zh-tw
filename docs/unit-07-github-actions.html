@@ -166,6 +166,96 @@
     <a href="unit-06-github-pages.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 6 · GitHub Pages</div></a>
     <a class="np-next" href="unit-08-open-source-best-practices.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 8 · 開源協作與最佳實踐</div></a>
 </div>
+<h2>7.10 進階真實情境 Worked Example：多 Job 矩陣測試 + Artifact 上傳 + 自動發佈</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">情境 · SCENARIO</div><pre>你是一個開源 CLI 工具的維護者，
+需要在每次 PR 上：
+- 在 3 個 OS × 3 個 Node 版本 = 9 台 runner 測試
+- 測試通過後上傳 build artifact
+- 合併到 main 時自動發佈 npm 套件</pre></div>
+  <div class="demo-block"><div class="demo-label">.github/workflows/ci.yml · 完整版</div><pre><span class="hl-k">name</span>: <span class="hl-s">CI + Release</span>
+<span class="hl-k">on</span>:
+  <span class="hl-k">push</span>: { <span class="hl-k">branches</span>: [main] }
+  <span class="hl-k">pull_request</span>:
+
+<span class="hl-k">jobs</span>:
+  <span class="hl-k">test</span>:
+    <span class="hl-k">runs-on</span>: <span class="hl-p">${{</span> matrix.os <span class="hl-p">}}</span>
+    <span class="hl-k">strategy</span>:
+      <span class="hl-k">matrix</span>:
+        <span class="hl-k">os</span>: [ubuntu-latest, macos-latest, windows-latest]
+        <span class="hl-k">node</span>: [18, 20, 22]
+    <span class="hl-k">steps</span>:
+      - <span class="hl-k">uses</span>: <span class="hl-s">actions/checkout@v4</span>
+      - <span class="hl-k">uses</span>: <span class="hl-s">actions/setup-node@v4</span>
+        <span class="hl-k">with</span>: { <span class="hl-k">node-version</span>: <span class="hl-p">${{</span> matrix.node <span class="hl-p">}}</span> }
+      - <span class="hl-k">run</span>: <span class="hl-s">npm ci</span>
+      - <span class="hl-k">run</span>: <span class="hl-s">npm test</span>
+      - <span class="hl-k">uses</span>: <span class="hl-s">actions/upload-artifact@v4</span>
+        <span class="hl-k">if</span>: <span class="hl-p">${{</span> matrix.os == 'ubuntu-latest' <span class="hl-p">}}</span>
+        <span class="hl-k">with</span>:
+          <span class="hl-k">name</span>: <span class="hl-s">dist</span>
+          <span class="hl-k">path</span>: <span class="hl-s">dist/</span>
+
+  <span class="hl-k">release</span>:
+    <span class="hl-k">needs</span>: <span class="hl-s">test</span>
+    <span class="hl-k">if</span>: <span class="hl-p">${{</span> github.ref == 'refs/heads/main' <span class="hl-p">}}</span>
+    <span class="hl-k">runs-on</span>: <span class="hl-s">ubuntu-latest</span>
+    <span class="hl-k">steps</span>:
+      - <span class="hl-k">uses</span>: <span class="hl-s">actions/checkout@v4</span>
+      - <span class="hl-k">uses</span>: <span class="hl-s">actions/setup-node@v4</span>
+        <span class="hl-k">with</span>: { <span class="hl-k">node-version</span>: <span class="hl-n">22</span>, <span class="hl-k">registry-url</span>: <span class="hl-s">https://registry.npmjs.org</span> }
+      - <span class="hl-k">run</span>: <span class="hl-s">npm publish --provenance</span>
+        <span class="hl-k">env</span>:
+          <span class="hl-k">NODE_AUTH_TOKEN</span>: <span class="hl-p">${{</span> secrets.NPM_TOKEN <span class="hl-p">}}</span></pre></div>
+</div>
+<div class="callout info"><strong>為什麼選這個方法：</strong>矩陣測試在 9 台 runner 上同時驗證跨平台相容性——任何一台紅了就代表有問題。Artifact 讓你在不同 job 間傳遞建置產物（測試 job 建好 → release job 發佈）。Release job 只在 main 分支上跑，確保 PR 不會誤發佈。</div>
+
+<h2>7.11 深入原理擴充</h2>
+<div class="demo-block">
+  <div class="demo-label">Runner 架構 · HOW IT WORKS</div>
+  <pre>GitHub Actions Runner 架構：
+
+┌─────────────────────────────────┐
+│ GitHub.com                       │
+│ └── Event Queue                  │
+│     └── Workflow Run (待派送)     │
+└────────────┬────────────────────┘
+             │ 調度
+┌────────────▼────────────────────┐
+│ Runner VM（Ubuntu / macOS / Win）│
+│ └── Runner Application（程式）    │
+│     └── 執行 Step（依序）        │
+│         ├── uses: action@v4     │
+│         │   └── Node.js 子程序   │
+│         └── run: npm test       │
+│             └── Shell 子程序     │
+└─────────────────────────────────┘</pre>
+</div>
+<ul>
+  <li><strong>Self-hosted Runner</strong>：你可以架設自己的 runner 在公司內網——適合需要存取內部資源、使用特定硬體（GPU）、或降低成本的場景。</li>
+  <li><strong>Workflow Runs 的隔離</strong>：每個 workflow run 在一台全新的 VM 上執行（無狀態），之前的 run 不會留下任何痕跡——這是「可重現性」的基礎。</li>
+  <li><strong>Composite Actions</strong>：可以把多個 step 包成一個可重用的 action，放在同一個 repo 的 <code>.github/actions/</code> 資料夾。比 Marketplace 上的 action 更輕量、更可定制。</li>
+  <li><strong>Reusable Workflows</strong>：一個 workflow 可以呼叫另一個 workflow（<code>uses: ./.github/workflows/ci.yml</code>），避免重複 YAML——大型專案的必備技巧。</li>
+</ul>
+
+<h2>7.12 診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>Workflow 完全沒觸發</td><td>YAML 檔案位置錯 / 觸發條件不對</td><td>確認 <code>.github/workflows/</code> 資料夾正確；<code>on.push.branches</code> 包含目標分支</td></tr>
+<tr><td><code>Unrecognized named-value: "secrets"</code></td><td>Secrets 在 PR 的 fork 中不可用</td><td>改用 <code>pull_request_target</code>（有安全風險）或在 workflow 中做條件判斷</td></tr>
+<tr><td>Matrix 測試其中一台紅了</td><td>跨平台相容問題</td><td>查看該 job 的 log；用 <code>if: matrix.os == 'ubuntu-latest'</code> 限制只在特定 OS 執行某 step</td></tr>
+<tr><td><code>Error: Input required and not supplied: node-version</code></td><td>setup-node 參數格式錯</td><td>確認 <code>with:</code> 底下有正確縮排（2 空格）</td></tr>
+<tr><td>Artifact 上傳失敗</td><td>路徑不存在</td><td>在 upload-artifact 前先 <code>ls dist/</code> 確認目錄存在</td></tr>
+</table>
+
+<h2>7.13 進階挑戰題</h2>
+<ol>
+  <li>建立一個 workflow，在 PR 上同時跑 Node.js 20 + Python 3.11 的測試（兩個語言在同一個專案），用 artifact 上傳測試報告，然後在 release job 中合併報告。</li>
+  <li>研究 <code>workflow_dispatch</code> 的 <code>inputs</code> 功能，建立一個手動觸發的 workflow，讓你在 Actions 頁面輸入參數（如環境名稱、版本號），workflow 根據輸入執行不同分支。</li>
+  <li>比較 <code>pull_request</code> 與 <code>pull_request_target</code> 的安全差異。為什麼 fork 的 PR 不能用 <code>pull_request</code> 存取 Secrets？什麼時候用 <code>pull_request_target</code> 是安全的？</li>
+</ol>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

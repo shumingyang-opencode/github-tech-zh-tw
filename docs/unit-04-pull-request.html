@@ -143,6 +143,89 @@ Rebase:         o──o──o──o──o（完全線性）</pre>
     <a href="unit-03-branches-merge.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 3 · 分支與合併</div></a>
     <a class="np-next" href="unit-05-issues-project.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 5 · Issues 與專案管理</div></a>
 </div>
+<h2>4.9 進階真實情境 Worked Example：Squash + Rebase + 保護分支的完整 CI PR 流程</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">情境 · SCENARIO</div><pre>你是資深工程師，需要把一個功能分支
+合併進 main，要求：
+- 至少 2 人 Approve
+- CI 通過
+- 用 Squash merge（歷史乾淨）
+- Rebase 分支保持線性
+- 合併後自動關閉對應 Issue</pre></div>
+  <div class="demo-block"><div class="demo-label">完整操作 · COMMANDS</div><pre><span class="hl-c"># 1. 設定保護分支（用 gh CLI）</span>
+gh api --method PUT \
+  "/repos/TechCo/app/branches/main/protection" \
+  -f enforce_admins=true \
+  -f required_status_checks='{"strict":true,"contexts":["ci"]}' \
+  -f required_pull_request_reviews='{"required_approving_review_count":2}'
+
+<span class="hl-c"># 2. 開發功能</span>
+git checkout -b feature/payment-gateway
+<span class="hl-c"># ... 改了 payment.py / tests/test_payment.py</span>
+git add -A && git commit -m "feat: add Stripe payment"
+
+<span class="hl-c"># 3. rebase 到最新 main</span>
+git fetch origin
+git rebase origin/main
+
+<span class="hl-c"># 4. push 並開 PR</span>
+git push origin feature/payment-gateway
+gh pr create \
+  --title "feat: Stripe payment integration" \
+  --body "Closes #42" \
+  --reviewer alice,bob
+
+<span class="hl-c"># 5. CI 通過 + 2 人 Approve → Squash merge</span>
+gh pr merge 87 --squash --auto
+
+<span class="hl-c"># 6. 本機同步</span>
+git checkout main && git pull
+
+<span class="hl-c"># 7. 驗證 Issue #42 自動關閉</span>
+gh issue view 42</pre></div>
+</div>
+<div class="callout info"><strong>為什麼選這個方法：</strong>Squash merge 把整個功能分支壓成一個乾淨 commit，歷史不會被 10 個 WIP commit 污染。搭配保護分支，確保每次合併都經過 CI + 人工審查——這是業界最嚴謹的 PR 工作流。</div>
+
+<h2>4.10 深入原理擴充</h2>
+<div class="demo-block">
+  <div class="demo-label">GitHub Merge 策略背後的 Git 操作</div>
+  <pre><span class="hl-c">Merge commit：</span>
+git merge --no-ff feature
+# 保留原始 commit，加一個 merge commit（2 個 parent）
+
+<span class="hl-c">Squash and merge：</span>
+git merge --squash feature
+# 所有變更壓進 staging → commit 成一筆
+# 分支上的原始 commit 不進 main
+
+<span class="hl-c">Rebase and merge：</span>
+git rebase main feature
+# commit 逐個重放，hash 全部改寫
+# 再 fast-forward merge（無合併節點）</pre>
+</div>
+<ul>
+  <li><strong>DAG（Directed Acyclic Graph）</strong>：Git 歷史是有向無環圖。Merge commit 有 2 個 parent，形成圖的「邊」；Rebase 的 commit 有 1 個 parent（線性），但 hash 被重寫。</li>
+  <li><strong>Clean History vs 完整歷史</strong>：Squash/Rebase 牺牲「某個 commit 是誰在什麼時候做的」，換取「歷史乾淨好讀」。如果需要追蹤細節，可以用 merge commit。</li>
+  <li><strong>Merge Queue</strong>：GitHub 內建功能，讓多個 PR 排隊合併，確保每次合併都經過 CI——避免「A 合了、B 還在等，結果 A 壞了」的情況。</li>
+</ul>
+
+<h2>4.11 診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>PR 按鈕顯示「不能合併」</td><td>保護分支要求 CI 未通過 / Approve 不足</td><td>到 Checks 分頁確認 CI 狀態；要求 reviewer Approve</td></tr>
+<tr><td><code>This branch is out-of-date with the base branch</code></td><td>main 有新 commit</td><td>在 PR 頁面按「Update branch」或本地 rebase 再 push</td></tr>
+<tr><td>Squash merge 後 Issue 未關閉</td><td>PR 描述沒寫 Closes #xx</td><td>修改 PR 描述加上關鍵字，或手動關閉 Issue</td></tr>
+<tr><td>合併後 <code>git pull</code> 出現衝突</td><td>本地有未同步的合併 commit</td><td><code>git fetch origin && git reset --hard origin/main</code></td></tr>
+<tr><td>PR review 留言遺失</td><td>用了 force push 覆蓋了 commit</td><td>不要在 review 過程 force push；如已發生，留言不會消失（在 PR 頁面上）</td></tr>
+</table>
+
+<h2>4.12 進階挑戰題</h2>
+<ol>
+  <li>在 repo 設定「Require 2 Approves + CI pass」的保護分支，然後故意提一個壞的 PR（CI 會失敗），觀察它如何被擋住。再修好它，走完「紅→綠→Approve→Squash」完整流程。</li>
+  <li>研究 GitHub 的 <strong>Merge Queue</strong> 功能（Settings → Branch → Merge queue），實作一個設定，讓 3 個 PR 排隊合併時，每個都必須通過 CI 才會依序合併。</li>
+  <li>比較 <code>git merge --no-ff</code> 與 <code>git merge</code>（fast-forward）在 DAG 上的差異。用 <code>git log --graph --oneline</code> 畫出兩種歷史的視覺差異。</li>
+</ol>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

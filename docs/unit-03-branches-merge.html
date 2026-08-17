@@ -147,6 +147,85 @@ git branch -d feature/greeting   <span class="hl-c"># 合併完可刪</span></pr
     <a href="unit-02-first-repo.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 2 · 第一個 Repo</div></a>
     <a class="np-next" href="unit-04-pull-request.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 4 · Pull Request 協作</div></a>
 </div>
+<h2>3.9 進階真實情境 Worked Example：Rebase 工作流 + 衝突排解 + bisect 找壞 commit</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">情境 · SCENARIO</div><pre>你是維護者，feature 分支落後 main 20 個 commit。
+合併會產生一個醜的合併節點，你決定用 rebase。
+rebase 過程中遇到衝突，排解後繼續。
+然後發現 main 的某個 commit 壞了某功能，
+用 bisect 找出是哪一個。</pre></div>
+  <div class="demo-block"><div class="demo-label">完整操作 · COMMANDS</div><pre><span class="hl-c"># 1. 同步上游並 rebase</span>
+git fetch origin
+git checkout feature/dark-mode
+git rebase origin/main
+
+<span class="hl-c"># 2. 衝突出現：app.py 第 42 行</span>
+<span class="hl-c">#    用 git diff 看衝突檔案</span>
+git diff
+<span class="hl-c">#    手動編輯後：</span>
+git add app.py
+git rebase --continue  <span class="hl-c"># 繼續（不要 git commit！）</span>
+
+<span class="hl-c"># 3. rebase 完成，push</span>
+git push origin feature/dark-mode --force-with-lease
+
+<span class="hl-c"># 4. 開 PR → 用 Squash merge</span>
+<span class="hl-c">#    歷史乾淨，完全線性</span>
+
+<span class="hl-c"># 5. 找出哪個 commit 壞了某功能（bisect）</span>
+git bisect start
+git bisect bad       <span class="hl-c"># 目前 commit 壞了</span>
+git bisect good v1.0 <span class="hl-c"># v1.0 還正常</span>
+
+<span class="hl-c"># 6. Git 每次跳一半，你測試後標記</span>
+<span class="hl-c">#    測試指令（跑一次就知道好壞）：</span>
+npm test
+git bisect good  <span class="hl-c"># 或 git bisect bad</span>
+
+<span class="hl-c"># 7. 找到後：</span>
+git bisect reset</pre></div>
+</div>
+<div class="callout info"><strong>為什麼選這個方法：</strong>Rebase 保持歷史完全線性（沒有合併節點），搭配 Squash merge 在 PR 階段壓成一筆——最後的 main 歷史讀起來就像一本書的目錄。bisect 用二分搜尋法在 O(log n) 步驟內定位到壞 commit，比肉眼看 log 快 100 倍。</div>
+
+<h2>3.10 深入原理擴充</h2>
+<div class="demo-block">
+  <div class="demo-label">Merge vs Rebase 的 DAG 差異</div>
+  <pre><span class="hl-c">Merge（保留歷史完整）：</span>
+main:     A──B──C───────M──────
+                \       /
+feature:         D──E──F
+
+M = merge commit（有兩個 parent）
+
+<span class="hl-c">Rebase（重寫歷史）：</span>
+main:     A──B──C──────────────
+                    \
+feature:             D'──E'──F'
+                     (commit hash 改了！)</pre>
+</div>
+<ul>
+  <li><strong>Rebase 原理</strong>：把 feature 分支的每一個 commit「重放（replay）」到 main 的最新節點之上。每個 commit 會產生新的 hash（D' ≠ D），所以是「重寫歷史」。</li>
+  <li><strong>Reflog</strong>：即使 rebase 重寫了歷史，<code>git reflog</code> 會記錄你每一次操作前後的 HEAD 位置——「Git 永遠能救回資料」的秘密武器。</li>
+  <li><strong>Protected Branch 的 rebase 限制</strong>：GitHub 保護分支上直接 rebase 會被擋，因為 rebase 改了 commit hash，會導致已 push 的分支與遠端不一致。</li>
+</ul>
+
+<h2>3.11 診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td><code>error: Your local changes would be overwritten</code></td><td>切換分支時有未 commit 的變更</td><td><code>git stash</code> 暫存 → 切換 → <code>git stash pop</code></td></tr>
+<tr><td><code>fatal: refusing to merge unrelated histories</code></td><td>兩個分支無共同祖先</td><td><code>git merge --allow-unrelated-histories origin/main</code></td></tr>
+<tr><td>rebase 後 push 被拒</td><td>force push 保護分支</td><td>改用 <code>--force-with-lease</code> 或在保護分支上改用 merge</td></tr>
+<tr><td>衝突檔案找不到</td><td>衝突已被 <code>git rebase --abort</code> 取消</td><td>重新執行 <code>git rebase origin/main</code></td></tr>
+<tr><td><code>fatal: Invalid argument</code> on bisect</td><td>good/bad 標記反了</td><td><code>git bisect reset</code> 重新開始</td></tr>
+</table>
+
+<h2>3.12 進階挑戰題</h2>
+<ol>
+  <li>在一個 repo 裡建立 feature-A 和 feature-B 兩個分支，各自修改不同檔案，然後同時 merge 回 main——觀察 Git 如何處理「無衝突的並行修改」。再故意在兩個分支改同一行，練習手動解決衝突。</li>
+  <li>用 <code>git rebase -i</code>（interactive rebase）把一個分支上最近 5 個 commit 合併成 2 個——練習 pick、squash、reword、fixup 的差異。</li>
+  <li>研究 <code>git cherry-pick</code> 的使用場景（只拿某分支的特定 commit），實際在兩個分支間 cherry-pick 一個 commit 並觀察 DAG 變化。</li>
+</ol>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

@@ -144,6 +144,99 @@
     <a href="unit-04-pull-request.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 4 · Pull Request 協作</div></a>
     <a class="np-next" href="unit-06-github-pages.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 6 · GitHub Pages</div></a>
 </div>
+<h2>5.9 進階真實情境 Worked Example：用 GitHub API 批次建立 Issue + Project 自動化</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">情境 · SCENARIO</div><pre>你是一個專案的 Tech Lead，
+需要把產品需求文件（PRD）轉化為
+20 個 Issue，建立 Project 看板，
+設定自動化規則：
+- Issue 開啟 → 自動加 label
+- PR 合併 → 自動移到 Done
+- 每週五自動發送進度摘要</pre></div>
+  <div class="demo-block"><div class="demo-label">完整操作 · COMMANDS</div><pre><span class="hl-c"># 1. 批次建立 Issues（gh CLI 陣列）</span>
+titles=(
+  "使用者登入功能"
+  "密碼重設流程"
+  "個人資料頁面"
+  "搜尋功能"
+  "匯出 CSV"
+)
+
+for t in "${titles[@]}"; do
+  gh issue create \
+    --title "$t" \
+    --label "enhancement" \
+    --project "v2.0 Launch" \
+    --body "需求來源：PRD section 2"
+done
+
+<span class="hl-c"># 2. 建立 Milestone</span>
+gh api --method POST \
+  "/repos/TechCo/app/milestones" \
+  -f title="v2.0" \
+  -f due_on="2026-12-01T00:00:00Z"
+
+<span class="hl-c"># 3. 用 Project 自動化規則</span>
+gh api --method POST \
+  "/orgs/TechCo/projects" \
+  -f name="v2.0 Launch" \
+  -f body="Product launch tracking"
+
+<span class="hl-c"># 4. 建立自動化規則（Webhook 觸發）</span>
+<span class="hl-c"># 設定路徑：Project → Settings → Workflows</span>
+<span class="hl-c"># Rule: Issue opened → Add to project</span>
+<span class="hl-c"># Rule: PR merged → Move to Done</span>
+
+<span class="hl-c"># 5. 每週進度摘要（用 Discussion + gh CLI）</span>
+gh api --method POST \
+  "/repos/TechCo/app/discussions" \
+  -f title="Weekly Status - $(date +%Y-%m-%d)" \
+  -f body="## v2.0 進度\n\n$(gh issue list \
+    --project 'v2.0 Launch' --json number,title,state \
+    --jq '.[] | "- [\(if .state=="OPEN" then " " else "x" end)] #\(.number) \(.title)"')"</pre></div>
+</div>
+<div class="callout info"><strong>為什麼選這個方法：</strong>用 gh API 批次操作比在 UI 上逐個建立快 50 倍，而且可版本化（整個腳本放進 repo 的 scripts/ 資料夾）。自動化規則讓「流程不用人盯」，維護者專注在決策而非瑣事。</div>
+
+<h2>5.10 深入原理擴充</h2>
+<div class="demo-block">
+  <div class="demo-label">GitHub Issues 資料模型</div>
+  <pre>Issue（獨立討論單）
+├── Number（自動編號，不可變更）
+├── Title + Body（Markdown）
+├── Labels[]（多對多）
+├── Assignees[]（多對多）
+├── Milestone（多對一）
+├── Project（多對多）
+├── Timeline（事件序列）
+│   ├── Comment（留言）
+│   ├── Cross-reference（關聯 PR / Issue）
+│   └── Commit / PR merge 事件
+└── State（open / closed）</pre>
+</div>
+<ul>
+  <li><strong>Issue 編號唯一性</strong>：Issue 和 PR 共享同一個號碼池——Issue #10 之後的 PR 可能是 #11，這是正常的。</li>
+  <li><strong>Cross-reference</strong>：在 PR 描述寫 <code>#42</code> 或 <code>Fixes #42</code>，GitHub 會在 Issue 的 Timeline 自動建立關聯，點擊可跳轉。</li>
+  <li><strong>Issue Template 的進階用法</strong>：YAML 表單格式（<code>.github/ISSUE_TEMPLATE/bug.yml</code>）支援下拉選單、核取方塊、必填欄位，比 Markdown 格式更結構化。</li>
+  <li><strong>Projects v2</strong>：新版 Projects 支援 Table View、Chart View（長條圖/圓餅圖）、Custom Fields（優先級、Sprint、成本），比舊版看板強大得多。</li>
+</ul>
+
+<h2>5.11 診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>Issue template 沒出現在選單</td><td>YAML 語法錯誤或檔名不對</td><td>確保放在 <code>.github/ISSUE_TEMPLATE/</code> 且以 <code>.yml</code> 結尾</td></tr>
+<tr><td>PR 合併後 Issue 沒自動關閉</td><td>PR 描述沒寫 Closes / Fixes / Resolves</td><td>修改 PR 描述補上關鍵字（在 PR 頁面可補）</td></tr>
+<tr><td>Label 顏色與預期不同</td><td>同名 label 有不同 color</td><td>到 Settings → Labels 統一設定顏色</td></tr>
+<tr><td>Project 看板卡片沒自動移動</td><td>Workflow 規則沒設定</td><td>Project → Settings → Workflows → 新增規則</td></tr>
+<tr><td><code>gh issue create</code> 回 404</td><td>repo 不存在或無寫入權限</td><td>用 <code>gh repo view</code> 確認 repo 存在；檢查 Token 權限</td></tr>
+</table>
+
+<h2>5.12 進階挑戰題</h2>
+<ol>
+  <li>為你的 repo 建立三種 Issue Template（Bug Report / Feature Request / Documentation），用 YAML 表單格式，包含必填欄位、下拉選單和核取方塊。開一個 Issue 測試模板是否正常運作。</li>
+  <li>用 gh CLI 建立一個 Project（v2），包含自訂欄位（Priority: High/Medium/Low、Sprint: Week 1-4），然後批次建立 10 個 Issue 並指派不同 Priority。</li>
+  <li>研究 GitHub Discussions 的「分类（Categories）」功能，設計一個分類架構（Q&A / Ideas / Show and Tell / Announcements），寫一段說明為什麼 Discussions 比 Issue 更適合某些場景。</li>
+</ol>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

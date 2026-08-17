@@ -136,6 +136,90 @@ git commit -m "first"</pre></div>
 <div class="next-prev">
     <a class="np-next" href="unit-02-first-repo.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 2 · 第一個 Repo</div></a>
 </div>
+<h2>1.9 進階真實情境 Worked Example：Organization 建立與多 Repo 安全治理</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">情境 · SCENARIO</div><pre>你是新創團隊 TechCo 的第一位工程師，
+負責建立 GitHub Organization，
+設定 SAML SSO、Branch Protection、
+Secret Scanning，並用 gh CLI 批次建立
+三個 repo（frontend / backend / infra）。</pre></div>
+  <div class="demo-block"><div class="demo-label">完整操作 · COMMANDS</div><pre><span class="hl-c"># 1. gh CLI 登入並設定身份</span>
+gh auth login
+gh auth setup-git
+
+<span class="hl-c"># 2. 用 API 建立 Organization</span>
+gh api --method POST /orgs \
+  -f login=TechCo \
+  -f name="TechCo Inc." \
+  -f billing_email="admin@techco.dev"
+
+<span class="hl-c"># 3. 批次建立三個 repo</span>
+for svc in frontend backend infra; do
+  gh repo create "TechCo/$svc" --private \
+    --description "$svc service"
+done
+
+<span class="hl-c"># 4. 為每個 repo 開啟 Secret Scanning</span>
+for svc in frontend backend infra; do
+  gh api --method PUT \
+    "/repos/TechCo/$svc" \
+    -f security_and_analysis='{"secret_scanning":{"status":"enabled"}}'
+done
+
+<span class="hl-c"># 5. 設定 Branch Protection（main）</span>
+gh api --method PUT \
+  "/repos/TechCo/backend/branches/main/protection" \
+  -f required_status_checks='{"strict":true,"contexts":["test"]}' \
+  -f enforce_admins=true \
+  -f required_pull_request_reviews='{"required_approving_review_count":2}'</pre></div>
+</div>
+<div class="callout info"><strong>為什麼選這個方法：</strong>Organization 讓你用統一的身份、權限、安全策略管所有 repo——比「每個人各管各的」安全十倍。用 gh API 批次操作比手動在 UI 上逐一設定快 10 倍，而且可重現、可版本化。</div>
+
+<h2>1.10 深入原理擴充</h2>
+<div class="demo-block">
+  <div class="demo-label">GitHub 架構 · ARCHITECTURE</div>
+  <pre>Git（本機）──HTTPS/SSH──▶ GitHub.com（Git 服務）
+                                    │
+                    ┌───────────────┼───────────────┐
+                    ▼               ▼               ▼
+               Issues / PR      Actions         Pages
+              （MySQL 資料庫）  （Runner VM）  （CDN + S3）
+                    │
+                    ▼
+               GitHub API v3 / GraphQL v4
+               （REST + GraphQL 雙介面）</pre>
+</div>
+<ul>
+  <li><strong>Git over HTTPS</strong>：用 credential helper 做認證，每次 fetch/push 都帶 HTTP Basic Auth（PAT 當密碼）。GitHub 於 2021 年強制要求 PAT，不再接受帳密。</li>
+  <li><strong>Git over SSH</strong>：用公私鑰挑戰-回應。SSH 連線建立後不需每次輸入密碼，但金鑰要存好——公鑰上傳到 <code>Settings → SSH keys</code>。</li>
+  <li><strong>OAuth 2.0 流程</strong>：<code>gh auth login</code> 背後觸發 OAuth device flow：CLI 跳出瀏覽器 → 授權 → 取得 access token → 存在本機 credential store。</li>
+  <li><strong>API Rate Limit</strong>：未認證 60 次/小時，認證後 5,000 次/小時。用 <code>gh api /rate_limit</code> 可查剩餘。</li>
+</ul>
+
+<div class="callout warn"><strong>容易踩的坑：</strong></div>
+<ul>
+  <li>PAT 建立時「權限範圍（scope）」決定能做什麼——<code>repo</code>（讀寫 repo）、<code>workflow</code>（改 Actions）、<code>admin:org</code>（管理 org）。權限太少會在 API 呼叫時收到 403。</li>
+  <li>SSH key 有 <code>ed25519</code> 與 <code>RSA</code> 兩種，ed25519 更安全且更快——用 <code>ssh-keygen -t ed25519</code> 產生。</li>
+  <li>GitHub 支援同一帳號綁多把 SSH key，但不支援同一把 key 綁多個帳號——每台機器一把 key，分別上傳。</li>
+</ul>
+
+<h2>1.11 診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td><code>git push</code> 回 HTTP 401</td><td>Token 過期或權限不足</td><td>到 Settings → Developer settings → PAT 檢查；用 <code>gh auth status</code> 查目前身份</td></tr>
+<tr><td><code>Permission denied (publickey)</code></td><td>SSH key 未上傳或 agent 未載入</td><td><code>ssh-add -l</code> 確認；未上傳就 copy id 公鑰貼到 GitHub</td></tr>
+<tr><td><code>gh: not found</code></td><td>gh CLI 未安裝或不在 PATH</td><td><code>brew install gh</code>（macOS）或 <code>sudo apt install gh</code>（Ubuntu）</td></tr>
+<tr><td>API 回 403 Rate Limited</td><td>超過 API 呼叫配額</td><td><code>gh api /rate_limit</code> 確認；加 token 認證或等待重設</td></tr>
+<tr><td><code>fatal: remote origin already exists</code></td><td>已設定過 origin</td><td><code>git remote set-url origin &lt;url&gt;</code> 改指向</td></tr>
+</table>
+
+<h2>1.12 進階挑戰題</h2>
+<ol>
+  <li>用 gh CLI 建立一個 GitHub Organization，包含 3 個 repo，並為所有 repo 啟用 Branch Protection（require 1 approve + CI pass）。截圖 Settings 頁面作為完成證明。</li>
+  <li>產生一把 ed25519 SSH key，加到 GitHub 帳號，測試 <code>ssh -T git@github.com</code> 顯示「Hi username!」。然後再產生一把 key 加到你的 Organization，測試兩把 key 在不同 repo 的行為差異。</li>
+  <li>研究 GitHub OAuth App 與 GitHub App 的差異（從 Settings → Developer settings），寫一段 150 字說明你會在什麼場景選擇哪一種。</li>
+</ol>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

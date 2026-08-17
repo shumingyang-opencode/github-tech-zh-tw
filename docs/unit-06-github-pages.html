@@ -133,6 +133,112 @@ gh api --method POST   repos/USER/my-site/pages   -f "source[branch]=main" -f "s
     <a href="unit-05-issues-project.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 5 · Issues 與專案管理</div></a>
     <a class="np-next" href="unit-07-github-actions.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 7 · GitHub Actions</div></a>
 </div>
+<h2>6.8 進階真實情境 Worked Example：多分支 + 自訂網域 + HTTPS 強制 + 環境變數管理</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">情境 · SCENARIO</div><pre>你有一個 Astro 靜態站，需要：
+- main 分支：穩定版（已部署）
+- dev 分支：開發版（可預覽）
+- 自訂網域：docs.techco.dev
+- 強制 HTTPS（從 HTTP 跳轉）
+- 用 GitHub Actions 自動建置部署</pre></div>
+  <div class="demo-block"><div class="demo-label">完整操作 · COMMANDS</div><pre><span class="hl-c"># 1. repo 內建立 Pages workflow</span>
+cat > .github/workflows/pages.yml << 'EOF'
+name: Deploy Pages
+on:
+  push:
+    branches: [main, dev]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci && npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+EOF
+
+<span class="hl-c"># 2. 設定自訂網域</span>
+echo "docs.techco.dev" > CNAME
+git add CNAME && git commit -m "chore: add CNAME"
+
+<span class="hl-c"># 3. 強制 HTTPS（Settings）</span>
+gh api --method PUT \
+  "/repos/TechCo/app/pages" \
+  -f build_type=workflow \
+  -f https_enforced=true
+
+<span class="hl-c"># 4. 為 dev 分支設定預覽環境</span>
+gh api --method POST \
+  "/repos/TechCo/app/pages/environments" \
+  -f name="dev-preview" \
+  -f source='{"branch":"dev"}'
+
+<span class="hl-c"># 5. 推送到 main 觸發正式部署</span>
+git checkout main && git push
+
+<span class="hl-c"># 6. 推送到 dev 觸發預覽部署</span>
+git checkout dev && git push
+
+<span class="hl-c"># 7. 驗證兩種網址</span>
+curl -I https://docs.techco.dev
+curl -I https://techco.dev/dev/</pre></div>
+</div>
+<div class="callout info"><strong>為什麼選這個方法：</strong>多分支 + 自訂網域 + Actions 的組合讓你在同一個 repo 同時維護正式站與預覽站，不用額外服務。HTTPS 強制確保所有訪客走加密通道——Google 也偏好 HTTPS 站的 SEO 排名。</div>
+
+<h2>6.9 深入原理擴充</h2>
+<div class="demo-block">
+  <div class="demo-label">GitHub Pages 建置流程</div>
+  <pre>push 到 main
+    │
+    ▼
+GitHub Pages 服務（內建）
+    ├── 方式一（Deploy from branch）：
+    │   └── 直接複製 static/ 資料夾到 CDN
+    │
+    └── 方式二（Actions workflow）：
+        ├── runner 執行 build step（如 astro build）
+        ├── 產物上傳為 artifact
+        └── deploy-pages action 部署 artifact 到 CDN
+            └── CDN 節點分佈全球（Fastly）</pre>
+</div>
+<ul>
+  <li><strong>gh-pages 分支的 refspec</strong>：當你選「Deploy from branch → gh-pages」，GitHub 會從這個分支的 <code>/docs</code> 資料夾或根目錄抓內容——這個分支的歷史會被 GitHub Pages 服務讀取，但你自己看不到「部署結果」（只能看原始碼）。</li>
+  <li><strong>CNAME 的 DNS 解析</strong>：CNAME 記錄指向 <code>你的帳號.github.io</code>，GitHub 會自動管理 HTTPS 憑證（Let's Encrypt）。網域根（apex）需要改 A record 指向 <code>185.199.108.153</code> 等四個 IP。</li>
+  <li><strong>Jekyll 與 .nojekyll</strong>：GitHub Pages 預設用 Jekyll 處理 Markdown——如果你不用 Jekyll，加空的 <code>.nojekyll</code> 檔讓它跳過。否則 <code>_</code> 開頭的資料夾會被忽略（Jekyll 的约定）。</li>
+</ul>
+
+<h2>6.10 診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>Pages 網址 404</td><td>未啟用 Pages / 建置失敗</td><td>到 Settings → Pages 確認狀態；到 Actions 分頁看建置 log</td></tr>
+<tr><td>自訂網域無法訪問</td><td>DNS 未生效 / CNAME 錯誤</td><td>用 <code>dig docs.techco.dev</code> 確認解析結果</td></tr>
+<tr><td>HTTPS 不顯示鎖頭</td><td>憑證尚未發放</td><td>等 15-30 分鐘；檢查 DNS 是否指向正確的 CNAME</td></tr>
+<tr><td>更新後頁面沒變化</td><td>瀏覽器快取</td><td>Ctrl+Shift+R 強制重新整理；或在 URL 後加 <code>?v=2</code></td></tr>
+<tr><td>Actions workflow 沒觸發</td><td>workflow 檔名或觸發條件錯誤</td><td>確認 <code>.github/workflows/pages.yml</code> 在正確分支；<code>on.push.branches</code> 包含你的分支</td></tr>
+</table>
+
+<h2>6.11 進階挑戰題</h2>
+<ol>
+  <li>用 Astro 或 Vite 建立一個靜態站，部署到 GitHub Pages，用 Actions workflow 建置。然後設定自訂網域（買一個便宜的 .dev 網域），完成 DNS 設定並驗證 HTTPS 生效。</li>
+  <li>建立一個「分支預覽」機制：每次開 PR 都自動部署一個預覽網址（如 <code>pr-42.yourapp.pages.dev</code>），PR 合併後自動刪除預覽站。</li>
+  <li>研究 GitHub Pages 的速率限制（每小時建置次數、repo 大小限制），寫一份「什麼時候該從 Pages 換到 Vercel/Netlify」的決策清單。</li>
+</ol>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
