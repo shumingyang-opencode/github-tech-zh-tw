@@ -256,6 +256,106 @@
   <li>比較 <code>pull_request</code> 與 <code>pull_request_target</code> 的安全差異。為什麼 fork 的 PR 不能用 <code>pull_request</code> 存取 Secrets？什麼時候用 <code>pull_request_target</code> 是安全的？</li>
 </ol>
 
+<h2>7.14 專案級端到端 Worked Example：完整 CI/CD 平台專案</h2>
+<p>單元 7.10 是一條 workflow 的矩陣測試；這裡把 CI/CD 放大成<strong>整個平台的流水線</strong>：可重用 action、相依快取、多服務矩陣、安全掃描、部署與發佈串成一條鏈。做完它，你的 repo 就是「推上 main 就自動走完整套品管」的狀態——這是單元 7.10 之上的平台架構設計。</p>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">產出檔案樹 · FILE TREE</div><pre>techco-app/
+├── .github/
+│   ├── actions/
+│   │   └── setup-env/          <span class="hl-c"># 共用「裝環境 + 快取」action</span>
+│   └── workflows/
+│       ├── ci.yml              <span class="hl-c"># 閘門：lint + test + build</span>
+│       ├── security.yml        <span class="hl-c"># CodeQL + 依賴掃描</span>
+│       └── release.yml         <span class="hl-c"># 打 tag → 建置 → 發佈</span>
+├── services/
+│   ├── api/                    <span class="hl-c"># Python 服務</span>
+│   ├── web/                    <span class="hl-c"># Node 服務</span>
+│   └── worker/                 <span class="hl-c"># Rust 服務</span>
+└── README.md                   <span class="hl-c"># 內含 CI 狀態徽章</span></pre></div>
+  <div class="demo-block"><div class="demo-label">關鍵檔案 · KEY FILES</div><pre><span class="hl-c"># .github/workflows/ci.yml 重點</span>
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: { service: [api, web, worker] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-env
+        with: { service: ${{ matrix.service }} }
+      - run: make test-${{ matrix.service }}
+      - uses: actions/cache@v4        <span class="hl-c"># 相依快取</span>
+        with:
+          path: ~/.cache
+          key: ${{ matrix.service }}-${{ hashFiles('**/lock*') }}</pre></div>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre><span class="hl-c"># 1. 跑一次完整 CI（3 服務平行）</span>
+gh run list --workflow ci.yml --limit 1 \
+  --json status,conclusion,displayTitle
+<span class="hl-c"># 輸出 → {"status":"completed","conclusion":"success",...}</span>
+
+<span class="hl-c"># 2. 快取命中（第二次跑更快）</span>
+gh run view &lt;run-id&gt; --json jobs \
+  --jq '.jobs[].steps[] | select(.name|contains("cache")) | .conclusion'
+<span class="hl-c"># 輸出 → success（且 log 顯示 Cache hit）</span>
+
+<span class="hl-c"># 3. 安全掃描結果</span>
+gh api /repos/TechCo/app/code-scanning/alerts --jq 'length'
+<span class="hl-c"># 輸出 → 0（無未修漏洞）</span>
+
+<span class="hl-c"># 4. Release 產物</span>
+gh release view v2.0.0 --json assets --jq '.assets[].name'
+<span class="hl-c"># 輸出 → techco-api_2.0.0.tar.gz ...</span></pre>
+</div>
+<div class="callout info"><strong>為什麼這是「專案級」：</strong>單元 7.10 是一條 workflow；這裡是「CI/CD 平台的架構」。共用 action 消除重複、快取節省時間與額度、安全掃描內建進閘門、發佈自動化——這些設計決定了一個團隊每天能迭代多快、多安全。</div>
+
+<h2>7.15 效能 / 品質 / 安全深度</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">效能 · PERFORMANCE</div><pre>- 相依快取：key 用 hashFiles 鎖定內容，
+  命中時省下數分鐘與額度
+- Matrix 平行：多 OS / 多版本同時跑
+- concurrency 取消「過時的 run」，
+  避免堆積浪費額度
+- 重度建置可改用 container 或 self-hosted runner
+- 快取 key 記得在依賴變更時自動失效</pre></div>
+  <div class="demo-block"><div class="demo-label">品質 · QUALITY</div><pre>- 用 reusable workflows / composite actions
+  消除 YAML 重複，規則只寫一次
+- Status check 當閘門：沒過就不能合併
+- Artifact 保存測試報告 / 建置產物，供事後檢討
+- action 固定到 tag 或完整 SHA（可重現）
+- README 放 CI 徽章，品質對外可見</pre></div>
+  <div class="demo-block"><div class="demo-label">安全 · SECURITY</div><pre>- Secrets 放 Settings：repo / org / 環境三層
+- GITHUB_TOKEN 最小權限（permissions 明確宣告）
+- 別在 fork 的 PR 上執行未受信任程式碼
+  （pull_request_target 有 SSRF / 注入風險）
+- action 一律固定版本或 SHA，防供應鏈竄改
+- Dependabot 掃依賴 + CodeQL 掃程式碼，
+  納入閘門（單元 8 會再深談）</pre></div>
+</div>
+
+<h2>7.16 站際比較：GitHub vs GitLab vs Markdown vs YAML vs JSON</h2>
+<table>
+<tr><th>面向</th><th>github</th><th>gitlab</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>CI 定義</td><td>.github/workflows/*.yml</td><td>.gitlab-ci.yml</td><td>—（不涉及）</td><td>兩者都以 YAML 定義 pipeline</td><td>—</td></tr>
+<tr><td>Runner</td><td>GitHub-hosted / self-hosted</td><td>GitLab Runner（自架為主）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>快取 / 矩陣</td><td>內建 cache + matrix</td><td>cache + parallel + include</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Secrets</td><td>repo / org / environment secrets</td><td>CI/CD variables（階層制）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>與其他欄的關係</td><td>Actions 全部以 YAML 撰寫</td><td>同左</td><td>workflow 描述與文件用 Markdown</td><td>workflow / pipeline 的定義載體</td><td>事件 payload 與 API 回應用 JSON</td></tr>
+</table>
+
+<h2>7.17 互動式進階檢核清單</h2>
+<div class="demo-render">
+  <ul>
+    <li><label><input type="checkbox"> 所有 workflow 的 action 都固定到 tag 或完整 SHA。</label></li>
+    <li><label><input type="checkbox"> 相依與建置結果有快取，第二次跑明顯變快。</label></li>
+    <li><label><input type="checkbox"> 所有 secrets 都在 Settings 設定，repo 內零 secrets。</label></li>
+    <li><label><input type="checkbox"> 安全掃描（CodeQL / 依賴）已加入合併閘門。</label></li>
+    <li><label><input type="checkbox"> 已用 reusable workflow / composite action 消除重複。</label></li>
+    <li><label><input type="checkbox"> 我理解 pull_request_target 的風險，不會在 fork PR 上執行未受信任程式碼。</label></li>
+  </ul>
+</div>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

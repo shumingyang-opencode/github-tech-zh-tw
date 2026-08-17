@@ -237,6 +237,110 @@ gh api --method POST \
   <li>研究 GitHub Discussions 的「分类（Categories）」功能，設計一個分類架構（Q&A / Ideas / Show and Tell / Announcements），寫一段說明為什麼 Discussions 比 Issue 更適合某些場景。</li>
 </ol>
 
+<h2>5.13 專案級端到端 Worked Example：開源社群 Issue 治理專案</h2>
+<p>單元 5.9 用 API 批次建了 20 個 Issue；這裡把 Issue 制度放大成<strong>整個專案的可持續治理</strong>——模板、標籤、里程碑、自動分診（triage）、每週摘要。讓「開源專案每天湧進的 Issue」不會淹沒維護者——這是單元 5.9「一次性操作」之上的制度設計。</p>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">產出檔案樹 · FILE TREE</div><pre>techco-app/
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug.yml            <span class="hl-c"># Bug 表單（必填欄位）</span>
+│   │   ├── feature.yml        <span class="hl-c"># 功能請求</span>
+│   │   └── config.yml         <span class="hl-c"># 封鎖空白 Issue</span>
+│   └── workflows/
+│       ├── triage.yml         <span class="hl-c"># 新 Issue 自動加 label / 指派</span>
+│       └── weekly-summary.yml <span class="hl-c"># 每週一發進度摘要</span>
+├── docs/
+│   └── triage-guide.md        <span class="hl-c"># 維護者分診 SOP</span>
+└── CONTRIBUTING.md            <span class="hl-c"># 指引貢獻者去哪開 Issue</span></pre></div>
+  <div class="demo-block"><div class="demo-label">關鍵檔案 · KEY FILES</div><pre><span class="hl-c"># .github/ISSUE_TEMPLATE/bug.yml（片段）</span>
+name: Bug report
+description: 回報問題
+body:
+  - type: textarea
+    attributes:
+      label: 步驟再現
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: 嚴重程度
+      options: [低, 中, 高]
+
+<span class="hl-c"># .github/workflows/triage.yml（片段）</span>
+on:
+  issues: { types: [opened] }
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              owner, repo, issue_number,
+              labels: ["needs-triage"]
+            })</pre></div>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre><span class="hl-c"># 1. 新 Issue 自動被加 needs-triage</span>
+gh issue create --title "登入壞了" --body "..."
+gh issue view 1 --json labels --jq '.labels[].name'
+<span class="hl-c"># 輸出 → needs-triage</span>
+
+<span class="hl-c"># 2. 里程碑進度</span>
+gh api /repos/TechCo/app/milestones \
+  --jq '.[] | "\(.title): \(.open_issues)/\(.closed_issues)"'
+<span class="hl-c"># 輸出 → v2.0: 3/12</span>
+
+<span class="hl-c"># 3. 每週摘要 workflow 產出的 Discussion</span>
+gh api "/repos/TechCo/app/discussions" \
+  --jq '.[] | select(.title|startswith("Weekly")) | .title' | head -1
+<span class="hl-c"># 輸出 → Weekly Status - 2026-08-17</span></pre>
+</div>
+<div class="callout info"><strong>為什麼這是「專案級」：</strong>單元 5.9 是一批一次性操作；這裡是「讓 Issue 流程自己跑」的制度。模板決定輸入品質、triage 決定優先序、週報決定透明度——真正的大型專案靠<strong>制度 + 自動化</strong>維持秩序，而不是靠維護者熬夜。</div>
+
+<h2>5.14 效能 / 品質 / 安全深度</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">效能 · PERFORMANCE</div><pre>- API 批次操作：一次迴圈建完，別逐筆點 UI
+- Webhook 即時觸發，triage 零延遲
+- Projects v2 自動化規則：卡片自動移動
+- 里程碑別掛太多 Issue：粒度適中才好追蹤
+- 大專案用 GraphQL API 一次撈多欄位，省 rate limit</pre></div>
+  <div class="demo-block"><div class="demo-label">品質 · QUALITY</div><pre>- 模板決定輸入品質：必填欄位 + 下拉選單
+- 分診 SLA：新 Issue 48 小時內回覆
+- 標籤體系標準化（bug / enhancement / needs-triage）
+- 里程碑對齊版本 → 交付範圍透明
+- triage-guide 寫成 SOP，任何維護者都能接手</pre></div>
+  <div class="demo-block"><div class="demo-label">安全 · SECURITY</div><pre>- Issue 內容不要貼 secrets / 個資
+- 自動化 bot 的 token 用最小權限
+- 避免讓社群成員誤觸敏感 label / 權限
+- 注意 Markdown 注入：不要渲染未受信任的 HTML
+- 安全問題（漏洞）請使用者走 SECURITY.md 私訊管道</pre></div>
+</div>
+
+<h2>5.15 站際比較：GitHub vs GitLab vs Markdown vs YAML vs JSON</h2>
+<table>
+<tr><th>面向</th><th>github</th><th>gitlab</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>議題模型</td><td>Issue（與 PR 共用編號）</td><td>Issue（與 MR 共用編號）</td><td>—（不涉及）</td><td>—（不涉及）</td><td>—（不涉及）</td></tr>
+<tr><td>看板</td><td>Projects v2（Table / Chart）</td><td>Issue Boards（內建）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>模板</td><td>.github/ISSUE_TEMPLATE（YAML / MD）</td><td>.gitlab/issue_templates（MD）</td><td>模板可用 Markdown 撰寫</td><td>結構化表單模板用 YAML</td><td>模板資料可 JSON 化處理</td></tr>
+<tr><td>自動化</td><td>Workflows + Projects 規則</td><td>內建 automation（workflow rules）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>與其他欄的關係</td><td>Issue body 用 Markdown</td><td>同左</td><td>議題內容的主要載體</td><td>模板與規則設定用 YAML</td><td>API 回傳 Issue 資料用 JSON</td></tr>
+</table>
+
+<h2>5.16 互動式進階檢核清單</h2>
+<div class="demo-render">
+  <ul>
+    <li><label><input type="checkbox"> 三種模板（bug / feature / docs）已上線，且實際被團隊使用。</label></li>
+    <li><label><input type="checkbox"> 標籤體系標準化（至少 bug / enhancement / needs-triage / good first issue）。</label></li>
+    <li><label><input type="checkbox"> 里程碑對齊版本，進度隨時可見。</label></li>
+    <li><label><input type="checkbox"> 新 Issue 自動 triage（自動加 label / 指派）。</label></li>
+    <li><label><input type="checkbox"> 每週自動產出進度摘要（Discussion 或郵件）。</label></li>
+    <li><label><input type="checkbox"> 有分診 SOP 文件，且團隊照著執行，48 小時內有人回覆。</label></li>
+  </ul>
+</div>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

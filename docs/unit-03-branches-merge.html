@@ -226,6 +226,99 @@ feature:             D'──E'──F'
   <li>研究 <code>git cherry-pick</code> 的使用場景（只拿某分支的特定 commit），實際在兩個分支間 cherry-pick 一個 commit 並觀察 DAG 變化。</li>
 </ol>
 
+<h2>3.13 專案級端到端 Worked Example：Trunk-Based 交付管線專案</h2>
+<p>單元 3.9 在「一個分支」上排解衝突；這裡把分支策略放大成<strong>整條交付管線</strong>：Trunk-Based 開發（main 隨時可部署）、短命功能分支、hotfix 直線救援、版本 tag 自動化。做完它，你的團隊就有一套「怎麼把分支變成正式版本」的標準作業程序——這是單元 3.9 之上的整季分支運作規則。</p>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">產出檔案樹 · FILE TREE</div><pre>techco-app/
+├── .github/
+│   ├── rulesets/
+│   │   └── main.json          <span class="hl-c"># main 保護（rulesets 版）</span>
+│   └── workflows/
+│       ├── ci.yml             <span class="hl-c"># 每個 PR 跑測試</span>
+│       └── release.yml        <span class="hl-c"># 打 tag 自動發 Release</span>
+├── scripts/
+│   └── version-bump.sh        <span class="hl-c"># 依 Conventional Commits 算版本</span>
+└── docs/
+    └── branching.md           <span class="hl-c"># 團隊分支規範（含流程圖）</span></pre></div>
+  <div class="demo-block"><div class="demo-label">關鍵檔案 · KEY FILES</div><pre><span class="hl-c"># docs/branching.md 核心規則</span>
+- main 永遠可部署，禁止直接 push
+- 功能：feature/xxx（存活 &lt; 3 天）
+- 救援：hotfix/xxx（直接從 main 切）
+- tag：vX.Y.Z 只打在主線通過 CI 之後
+- 合併一律 Squash，歷史保持線性
+
+<span class="hl-c"># scripts/version-bump.sh（片段）</span>
+case "$1" in
+  feat)      bump minor ;;
+  fix)       bump patch ;;
+  breaking)  bump major ;;
+esac</pre></div>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre><span class="hl-c"># 1. 確認 main 歷史完全線性（無 merge 節點）</span>
+git log --graph --oneline main | grep -c '^M'
+<span class="hl-c"># 輸出 → 0</span>
+
+<span class="hl-c"># 2. 模擬 hotfix 救援</span>
+git checkout -b hotfix/login-bug main
+git commit -am "fix: 登入 500 錯誤"
+git push origin hotfix/login-bug
+<span class="hl-c"># PR 合併後打 patch 版 tag：</span>
+git tag v1.0.1 && git push --tags
+gh release view v1.0.1 --json tagName,name
+<span class="hl-c"># 輸出 → {"tagName":"v1.0.1","name":"v1.0.1"}</span>
+
+<span class="hl-c"># 3. 確認分支已 rebase 到最新 main</span>
+git fetch origin && git log main..HEAD --oneline | wc -l
+<span class="hl-c"># 輸出 → 0（無落後 commit）</span></pre>
+</div>
+<div class="callout info"><strong>為什麼這是「專案級」：</strong>單元 3.9 是「一次 rebase」的技術；這裡是「一整季的分支運作規則」。分支策略要先寫成文件、再用 rulesets 強制執行——技術（merge / rebase / bisect）只是底層，規則是專案層的設計。</div>
+
+<h2>3.14 效能 / 品質 / 安全深度</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">效能 · PERFORMANCE</div><pre>- 大 repo 用 --filter=blob:none / sparse-checkout
+  讓分支切換與 clone 更快
+- bisect 用二分搜尋：O(log n) 步驟定位壞 commit
+- 長存分支（超過 2 週）會讓衝突變多：
+  分支越短、rebase 越省事
+- 用 git maintenance（background gc）保持
+  物件庫緊緻，fetch/push 更快</pre></div>
+  <div class="demo-block"><div class="demo-label">品質 · QUALITY</div><pre>- Trunk-Based 讓 main 永遠綠燈、隨時可部署
+- 線性歷史（Squash + rebase）好讀、好 bisect
+- rulesets 統一規則，避免「每個人的 main 不一樣」
+- hotfix 有明確流程，緊急時不會亂
+- 每筆 commit 小而聚焦，review 更快</pre></div>
+  <div class="demo-block"><div class="demo-label">安全 · SECURITY</div><pre>- 保護分支擋住 force push 與直接推送
+- require signed commits 確保來源可信
+- 已公開的分支不要用 rebase 重寫歷史
+  （會讓協作者的 clone 失序）
+- 需要 force push 時一律 --force-with-lease
+- 舊分支定期清理，避免殘留敏感程式碼</pre></div>
+</div>
+
+<h2>3.15 站際比較：GitHub vs GitLab vs Markdown vs YAML vs JSON</h2>
+<table>
+<tr><th>面向</th><th>github</th><th>gitlab</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>分支模型</td><td>原生 Git 指令 + 網頁切換</td><td>同 Git（語法一致）</td><td>—（不涉及）</td><td>—（不涉及）</td><td>—（不涉及）</td></tr>
+<tr><td>保護機制</td><td>Rulesets / Branch protection</td><td>Protected branches（內建）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>合併策略</td><td>Merge / Squash / Rebase 三選一</td><td>Merge commit / Squash / Rebase</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>衝突解決介面</td><td>網頁 editor + 命令列</td><td>網頁 editor + 命令列</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>與其他欄的關係</td><td>PR 描述與文件用 Markdown</td><td>同左</td><td>PR 描述 / 文件載體</td><td>CI 觸發與規則設定用 YAML</td><td>API 回傳分支與合併資料用 JSON</td></tr>
+</table>
+
+<h2>3.16 互動式進階檢核清單</h2>
+<div class="demo-render">
+  <ul>
+    <li><label><input type="checkbox"> main 禁止直接 push，一切變更都走 PR 合併。</label></li>
+    <li><label><input type="checkbox"> 合併後 main 歷史線性（Squash / Rebase），無多餘 merge 節點。</label></li>
+    <li><label><input type="checkbox"> 已用 rulesets / branch protection 強制「CI 通過才能合併」。</label></li>
+    <li><label><input type="checkbox"> 完整演練過一次 hotfix：切分支 → PR → tag → 發佈。</label></li>
+    <li><label><input type="checkbox"> 我能靠 bisect 在 10 分鐘內找到壞 commit 並 revert。</label></li>
+    <li><label><input type="checkbox"> 需要 force push 時一律用 --force-with-lease，且從不重寫已公開的 main。</label></li>
+  </ul>
+</div>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

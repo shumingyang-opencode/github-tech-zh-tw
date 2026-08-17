@@ -239,6 +239,106 @@ GitHub Pages 服務（內建）
   <li>研究 GitHub Pages 的速率限制（每小時建置次數、repo 大小限制），寫一份「什麼時候該從 Pages 換到 Vercel/Netlify」的決策清單。</li>
 </ol>
 
+<h2>6.12 專案級端到端 Worked Example：Docs-as-Code 完整文件站專案</h2>
+<p>單元 6.8 部署了「一個正式站 + 一個 dev 站」；這裡把文件站放大成<strong>產品級 Docs-as-Code</strong>：內容與程式碼同 repo、PR 審查才更新、每個 PR 有預覽網址、自動檢查失效連結。做完它，文件品質與程式碼品質同步——這是單元 6.8「怎麼部署」之上的「文件當產品經營」。</p>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">產出檔案樹 · FILE TREE</div><pre>techco-docs/
+├── src/
+│   ├── content/docs/
+│   │   ├── getting-started.md
+│   │   └── api-reference.md
+│   └── astro.config.mjs
+├── public/
+│   ├── favicon.svg
+│   └── robots.txt
+├── .github/workflows/
+│   ├── preview.yml            <span class="hl-c"># PR → 預覽站（pr-NNN）</span>
+│   └── deploy.yml             <span class="hl-c"># main → 正式站</span>
+├── scripts/
+│   └── check-links.mjs        <span class="hl-c"># 掃描失效連結 / 圖片</span>
+├── .nojekyll                  <span class="hl-c"># 跳過 Jekyll（用 Astro 建置）</span>
+├── CNAME                      <span class="hl-c"># docs.techco.dev</span>
+└── package.json</pre></div>
+  <div class="demo-block"><div class="demo-label">關鍵檔案 · KEY FILES</div><pre><span class="hl-c"># .github/workflows/preview.yml（PR 預覽）</span>
+name: Preview
+on: pull_request
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, pages: write, id-token: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci && npm run build
+      - name: 檢查失效連結
+        run: node scripts/check-links.mjs dist
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
+      - id: deploy
+        uses: actions/deploy-pages@v4
+        with: { preview: true }</pre></div>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre><span class="hl-c"># 1. 正式站回應</span>
+curl -sI https://docs.techco.dev | head -1
+<span class="hl-c"># 輸出 → HTTP/2 200</span>
+
+<span class="hl-c"># 2. HTTPS 強制</span>
+curl -sI http://docs.techco.dev | grep -i location
+<span class="hl-c"># 輸出 → Location: https://docs.techco.dev/</span>
+
+<span class="hl-c"># 3. PR 預覽網址（在 PR 頁面有 View deployment 連結）</span>
+gh pr view 45 --json url --jq '.url'
+<span class="hl-c"># 輸出 → https://github.com/TechCo/techco-docs/pull/45</span>
+
+<span class="hl-c"># 4. 失效連結檢查結果（CI log）</span>
+<span class="hl-c"># 輸出 → "Checked 42 links, 0 broken"</span></pre>
+</div>
+<div class="callout info"><strong>為什麼這是「專案級」：</strong>單元 6.8 是「怎麼部署」；這裡是「文件怎麼當產品經營」。內容走 PR 審查、連結壞了 CI 直接擋、每版文件有版本對照——Docs-as-Code 讓文件不再是「事後補的」，而是交付流程的一等公民。</div>
+
+<h2>6.13 效能 / 品質 / 安全深度</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">效能 · PERFORMANCE</div><pre>- 靜態資產走全球 CDN，快取頭設好
+- 圖片壓縮 / 轉 WebP，減少頻寬
+- 建置用快取 + 增量輸出，PR 預覽更快
+- 注意 Pages 每月建置與頻寬限制（100GB/月）
+- Lighthouse / PageSpeed 量測首屏效能</pre></div>
+  <div class="demo-block"><div class="demo-label">品質 · QUALITY</div><pre>- 每個 PR 有預覽網址 → 內容先看再上線
+- CI 檢查失效連結 / 圖片 / 排版錯誤
+- 版本化文件：每一版 docs 對應程式碼版本
+- 提供搜尋（pagefind / Algolia）降低找資料成本
+- 404 頁 + sitemap 讓使用者與 SEO 都舒服</pre></div>
+  <div class="demo-block"><div class="demo-label">安全 · SECURITY</div><pre>- HTTPS 強制：所有訪客走加密通道
+- 自訂網域確認 DNS 由你控制，避免被劫持
+- 建置時不要把 secrets 打包進 dist
+- robots.txt 控制可被抓取的範圍
+- 必要時加 CSP header 防 XSS</pre></div>
+</div>
+
+<h2>6.14 站際比較：GitHub vs GitLab vs Markdown vs YAML vs JSON</h2>
+<table>
+<tr><th>面向</th><th>github</th><th>gitlab</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>靜態託管</td><td>GitHub Pages（100GB/月）</td><td>GitLab Pages</td><td>—（不涉及）</td><td>—（不涉及）</td><td>—（不涉及）</td></tr>
+<tr><td>自訂網域 + HTTPS</td><td>內建，Let's Encrypt 自動憑證</td><td>內建，同樣自動憑證</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>CI 整合</td><td>GitHub Actions 部署</td><td>GitLab CI 部署</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>建置選項</td><td>Jekyll 或任意 SSG（.nojekyll）</td><td>任意（Artifacts → Pages）</td><td>文件內容以 Markdown 撰寫</td><td>SSG 設定檔用 YAML（frontmatter）</td><td>SSG 資料 / API 回應用 JSON</td></tr>
+<tr><td>與其他欄的關係</td><td>Pages 內容多為 Markdown</td><td>同左</td><td>頁面內容的主要載體</td><td>frontmatter 與站台設定</td><td>檢索索引與資料來源</td></tr>
+</table>
+
+<h2>6.15 互動式進階檢核清單</h2>
+<div class="demo-render">
+  <ul>
+    <li><label><input type="checkbox"> 正式站強制 HTTPS，自訂網域驗證通過。</label></li>
+    <li><label><input type="checkbox"> 每個 PR 都有可點擊的預覽網址，合併前先看內容。</label></li>
+    <li><label><input type="checkbox"> CI 會攔截失效連結 / 失效圖片。</label></li>
+    <li><label><input type="checkbox"> 已有 404 頁與 sitemap，搜尋功能可用。</label></li>
+    <li><label><input type="checkbox"> repo 內無任何 secrets 被打包進 dist（建置後檢查過）。</label></li>
+    <li><label><input type="checkbox"> 文件與程式碼版本對應，每個版本有對應的文件版本。</label></li>
+  </ul>
+</div>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

@@ -220,6 +220,105 @@ gh api --method PUT \
   <li>研究 GitHub OAuth App 與 GitHub App 的差異（從 Settings → Developer settings），寫一段 150 字說明你會在什麼場景選擇哪一種。</li>
 </ol>
 
+<h2>1.13 專案級端到端 Worked Example：TechCo 公司 GitHub 基礎建設專案</h2>
+<p>把本單元的知識（平台、認證、Organization、安全治理）放大到<strong>整家公司</strong>的規模：所有設定都寫成程式碼（Infrastructure as Code），放進一個 <code>techco-infra</code> repo，讓「公司怎麼用 GitHub」也可以審查、版本化、重現——這是單元 1.9「單一 repo 治理」之上的整站層級。</p>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">產出檔案樹 · FILE TREE</div><pre>techco-infra/
+├── .github/
+│   ├── CODEOWNERS            <span class="hl-c"># 設定變更需 DevOps 審查</span>
+│   └── workflows/
+│       └── audit.yml         <span class="hl-c"># 每晚稽核「設定有沒有漂移」</span>
+├── scripts/
+│   ├── bootstrap-org.sh      <span class="hl-c"># 一次性初始化（延伸 1.9）</span>
+│   └── apply-policies.sh     <span class="hl-c"># 把策略套到所有 repo</span>
+├── policies/
+│   ├── org.yml               <span class="hl-c"># org 層級規則</span>
+│   └── branch-protection.json<span class="hl-c"># 標準保護分支設定</span>
+└── README.md</pre></div>
+  <div class="demo-block"><div class="demo-label">關鍵檔案 · KEY FILES</div><pre><span class="hl-c"># policies/branch-protection.json（片段）</span>
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["ci"]
+  },
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 2
+  },
+  "enforce_admins": true
+}
+
+<span class="hl-c"># scripts/apply-policies.sh（核心迴圈）</span>
+for repo in $(gh repo list TechCo \
+  --json name --jq '.[].name'); do
+  gh api --method PUT \
+    "/repos/TechCo/$repo/branches/main/protection" \
+    --input policies/branch-protection.json
+done</pre></div>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre><span class="hl-c"># 1. 驗證所有 repo 的保護分支都生效</span>
+gh api /repos/TechCo/backend/branches/main/protection \
+  --jq '.required_pull_request_reviews.required_approving_review_count'
+<span class="hl-c"># 輸出 → 2</span>
+
+<span class="hl-c"># 2. 稽核成員 2FA 狀態（org 稽核 log）</span>
+gh api "/orgs/TechCo/audit-log" --paginate \
+  --jq '.[] | select(.action=="org.two_factor_requirement_enabled")' | head -1
+<span class="hl-c"># 輸出 → {"action":"org.two_factor_requirement_enabled", ...}</span>
+
+<span class="hl-c"># 3. 全公司 repo 清單與可見性</span>
+gh repo list TechCo --limit 100 --json name,visibility
+<span class="hl-c"># 輸出 → [{"name":"backend","visibility":"PRIVATE"}, ...]</span></pre>
+</div>
+<div class="callout info"><strong>為什麼這是「專案級」：</strong>單元 1.9 只設定單一 repo；這裡把<strong>整間公司</strong>當成一個專案在治理——用程式碼管策略、用 CI 稽核漂移、用 CODEOWNERS 讓重大變更有人把關。規模越大，「人按 UI 慢慢點」越不可行，改成「程式碼 + 自動化」才是正解。</div>
+
+<h2>1.14 效能 / 品質 / 安全深度</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">效能 · PERFORMANCE</div><pre><span class="hl-c"># 傳輸與 API 面</span>
+- git clone 用 SSH 比 HTTPS 少一層認證往返
+- API rate limit：認證 5,000 次/小時，批次優先
+- 大 repo 用 --filter=blob:none 只拉需要的物件
+- LFS 檔案走獨立 CDN，不卡 Git 傳輸
+<span class="hl-c"># 回報與儀表板</span>
+- github.com/status 查平台可用性
+- gh api /rate_limit 檢查剩餘額度</pre></div>
+  <div class="demo-block"><div class="demo-label">品質 · QUALITY</div><pre>平台層品質由 GitHub 保證（SLA、Status Page），
+你這一層的品質是「設定品質」：
+- 每條規則都有人負責（CODEOWNERS）
+- 設定進 repo：可 diff、可 review
+- 稽核 workflow 每天抓「設定漂移」
+- 新 repo 用預設範本（repo template）
+  自動帶上安全設定，避免「開局就裸奔」</pre></div>
+  <div class="demo-block"><div class="demo-label">安全 · SECURITY</div><pre>安全由上到下三層：
+1. 身份層：SAML SSO + 強制 2FA
+2. 存取層：最小權限 + 保護分支
+3. 內容層：Secret Scanning + push protection
+紅線：PAT 只用最小 scope、不放進 repo、
+失效立刻撤銷；金鑰一律存密碼管理員。</pre></div>
+</div>
+
+<h2>1.15 站際比較：GitHub vs GitLab vs Markdown vs YAML vs JSON</h2>
+<table>
+<tr><th>面向</th><th>github</th><th>gitlab</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>定位</td><td>雲端程式碼託管平台</td><td>雲端 / 自架 DevOps 平台</td><td>輕量排版語法</td><td>人類可讀設定格式</td><td>資料交換格式</td></tr>
+<tr><td>認證</td><td>PAT / SSH / OAuth</td><td>PAT / OAuth / SAML</td><td>—（不涉及）</td><td>—（不涉及）</td><td>—（不涉及）</td></tr>
+<tr><td>組織治理</td><td>Organization + Teams</td><td>Group + Subgroups（權限更細）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>與其他欄的關係</td><td>全站以 Markdown 寫文件、YAML 寫 Actions、JSON 做 API 資料</td><td>同左（CI 也用 YAML）</td><td>GitHub README / Issue 的載體</td><td>GitHub Actions workflow 的載體</td><td>GitHub REST API 的回應格式</td></tr>
+</table>
+
+<h2>1.16 互動式進階檢核清單</h2>
+<div class="demo-render">
+  <ul>
+    <li><label><input type="checkbox"> 我的帳號已開啟 2FA，並把救援碼備份到密碼管理員。</label></li>
+    <li><label><input type="checkbox"> 我已建立 Organization（或至少知道其用途），並啟用 SSO / 強制 2FA。</label></li>
+    <li><label><input type="checkbox"> 至少一個 repo 已套用保護分支（2 人 Approve + CI 通過）。</label></li>
+    <li><label><input type="checkbox"> 我的 PAT 只授予必要 scope，且存放在密碼管理員而非 repo 或程式碼。</label></li>
+    <li><label><input type="checkbox"> 我能從稽核 log 說出「最近一次權限變更」是誰、改什麼。</label></li>
+    <li><label><input type="checkbox"> 我把公司/個人「GitHub 使用規則」寫成了文件（誰可建 repo、token 規則、誰負責）。</label></li>
+  </ul>
+</div>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

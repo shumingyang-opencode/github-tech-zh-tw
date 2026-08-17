@@ -270,6 +270,112 @@ git push → 網路傳輸
   <li>研究 <code>git push --force</code> 與 <code>git push --force-with-lease</code> 的差異，實際用兩個分支模擬場景：為什麼 force-with-lease 更安全？</li>
 </ol>
 
+<h2>2.14 專案級端到端 Worked Example：全端 Monorepo「從空白到可交付」專案</h2>
+<p>單元 2.9 只推了「一個 README」；這裡建立一個<strong>真的要開工的全端 monorepo</strong>——frontend、backend、docs、assets 一次到位，含 .gitignore、Git LFS、commit 規範。做完它，你的 repo 就是「可以直接交給團隊」的狀態——這是單元 2.10「單一 repo 進階技巧」之上的整站施工標準。</p>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">產出檔案樹 · FILE TREE</div><pre>techco-app/
+├── frontend/                  <span class="hl-c"># React + Vite</span>
+│   ├── src/
+│   └── package.json
+├── backend/                   <span class="hl-c"># Python FastAPI</span>
+│   ├── app/
+│   ├── requirements.txt
+│   └── .env.example           <span class="hl-c"># 範例，絕不提交 .env</span>
+├── docs/
+│   └── architecture.md
+├── assets/                    <span class="hl-c"># 大檔 → Git LFS</span>
+│   └── demo.mp4
+├── .gitattributes             <span class="hl-c"># LFS 規則（由 LFS 追蹤）</span>
+├── .gitignore
+├── .editorconfig
+└── README.md</pre></div>
+  <div class="demo-block"><div class="demo-label">關鍵檔案 · KEY FILES</div><pre><span class="hl-c"># .gitattributes（LFS 規則）</span>
+*.mp4  filter=lfs diff=lfs merge=lfs -text
+*.zip  filter=lfs diff=lfs merge=lfs -text
+*.psd  filter=lfs diff=lfs merge=lfs -text
+
+<span class="hl-c"># .gitignore 重要段落</span>
+node_modules/
+dist/
+__pycache__/
+.env
+*.log
+
+<span class="hl-c"># README.md（門面）</span>
+# TechCo App
+全端範例：React + FastAPI
+├── 快速開始
+├── 結構說明
+└── 開發規範（commit 格式、分支名）</pre></div>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre><span class="hl-c"># 1. 確認 .env 與 node_modules 不會被追蹤</span>
+git status --porcelain | grep -E '\.env|node_modules'
+<span class="hl-c"># 輸出 →（空，代表沒被追蹤）</span>
+
+<span class="hl-c"># 2. 確認 LFS 生效</span>
+git lfs ls-files
+<span class="hl-c"># 輸出 → 1f8a2b... assets/demo.mp4 (LFS: 24.5 MB)</span>
+
+<span class="hl-c"># 3. 檢查 repo 實體體積（不含 LFS 大檔）</span>
+git count-objects -vH | grep size-pack
+<span class="hl-c"># 輸出 → size-pack: 說明 repo 保持輕量</span>
+
+<span class="hl-c"># 4. 全新機器 clone 驗證（LFS 自動下載）</span>
+git clone git@github.com:TechCo/techco-app.git
+git lfs pull</pre>
+</div>
+<div class="callout info"><strong>為什麼這是「專案級」：</strong>不是「學會 push 一個檔案」，而是把 repo「初始化到可交付」——敏感檔被擋住、大檔走 LFS、新人看 README 就能開工。單元 2.10 是單一 repo 的進階技巧，這裡是<strong>整個產品 repo 的施工標準</strong>。</div>
+
+<h2>2.15 效能 / 品質 / 安全深度</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">效能 · PERFORMANCE</div><pre>repo 尺寸管理：
+- 大檔走 LFS，避免 repo 肥大
+- GitHub 警示：repo 超過 1GB 應處理
+clone 加速：
+- --depth=1 淺克隆（CI 常用）
+- --filter=blob:none 只抓歷史結構
+- sparse-checkout 只 checkout 需要的目錄
+傳輸：
+- 每次 push 只送 packfile 差異，而非整個檔案</pre></div>
+  <div class="demo-block"><div class="demo-label">品質 · QUALITY</div><pre>repo 就是產品門面：
+- README：一句話說明 + 快速開始
+- .editorconfig：統一縮排與換行
+- commit 訊息規範（feat:/fix:/docs:）
+- 開啟 branch protection 或 repo rulesets
+內務：.gitignore 寫完整 → 別人不小心
+提交 .env 時，檢核與 CI 會擋下。</pre></div>
+  <div class="demo-block"><div class="demo-label">安全 · SECURITY</div><pre>第一道防線在 repo 邊界：
+- .env / 憑證檔 100% 進 .gitignore
+- 提交前用 pre-commit hook 掃 secret
+- 開啟 Secret scanning 與 push protection
+- 已洩漏：先撤銷憑證 &gt; 再清理歷史（filter-repo）
+- 最小權限：只有需要的人能寫入</pre></div>
+</div>
+
+<h2>2.16 站際比較：GitHub vs GitLab vs Markdown vs YAML vs JSON</h2>
+<table>
+<tr><th>面向</th><th>github</th><th>gitlab</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>repo 建立</td><td>gh repo create / 網頁按鈕</td><td>GitLab 專案創建 / API</td><td>—（不涉及）</td><td>—（不涉及）</td><td>—（不涉及）</td></tr>
+<tr><td>託管與私有</td><td>GitHub.com / Enterprise Server</td><td>SaaS / 自架 GitLab CE/EE</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>大型檔案</td><td>Git LFS（單檔上限 2GB）</td><td>Git LFS（額度策略不同）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>檔案內容形式</td><td>以 Markdown 寫 README / 文件</td><td>同左</td><td>README 與文件的主要語法</td><td>CI 設定（.gitlab-ci.yml）</td><td>GitHub / GitLab API 的傳輸格式</td></tr>
+<tr><td>協作入口</td><td>Issue / PR 按鈕</td><td>Issue / MR 按鈕</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+
+<h2>2.17 互動式進階檢核清單</h2>
+<div class="demo-render">
+  <ul>
+    <li><label><input type="checkbox"> repo 內沒有任何 .env、金鑰或密碼（grep 搜尋過也確認乾淨）。</label></li>
+    <li><label><input type="checkbox"> 所有大檔（&gt;50MB）都已改由 Git LFS 追蹤，clone 速度不受影響。</label></li>
+    <li><label><input type="checkbox"> 在全新機器上 clone 後，依 README 指引一鍵就能把專案跑起來。</label></li>
+    <li><label><input type="checkbox"> commit 訊息統一格式（feat:/fix:/docs:/chore:）。</label></li>
+    <li><label><input type="checkbox"> 已開啟 Secret scanning / push protection，且設有自動檢核。</label></li>
+    <li><label><input type="checkbox"> .editorconfig 與 .gitignore 已提交，且團隊確實遵循。</label></li>
+  </ul>
+</div>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

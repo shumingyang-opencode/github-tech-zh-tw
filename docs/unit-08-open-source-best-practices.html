@@ -269,7 +269,7 @@ git push origin --delete feature/new-snippet-language</pre></div>
 <table>
 <tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
 <tr><td><code>gh pr create</code> 回 422 Unprocessable Entity</td><td>標題或描述缺少必要欄位</td><td>確認 <code>--title</code> 和 <code>--body</code> 已提供；檢查 repo 是否有 PR template</td></tr>
-<tr><td>Fork 後找不到上游 repo</td><td>未設定 upstream remote</td><td><code>git remote add upstream https://github.com/原作者/repo.git</code></td</tr>
+<tr><td>Fork 後找不到上游 repo</td><td>未設定 upstream remote</td><td><code>git remote add upstream https://github.com/原作者/repo.git</code></td></tr>
 <tr><td>PR 被維護者關閉但沒合併</td><td>不符合專案需求或有更簡單的解法</td><td>禮貌地在 PR 留言詢問原因；從經驗中學習</td></tr>
 <tr><td><code>git filter-repo</code> 顯示找不到</td><td>未安裝</td><td><code>pip install git-filter-repo</code> 或 <code>brew install git-filter-repo</code></td></tr>
 <tr><td>Release tag 沒顯示在 GitHub</td><td>只在本機建了 tag，沒 push</td><td><code>git push origin --tags</code></td></tr>
@@ -281,6 +281,107 @@ git push origin --delete feature/new-snippet-language</pre></div>
   <li>為你自己的專案設定完整的安全鏈：啟用 Secret Scanning、Dependabot、Code Scanning，並在保護分支上要求 signed commits。寫一份 200 字的「安全設定報告」。</li>
   <li>研究 GitHub 的 <strong>Sponsor</strong> 功能和 <strong>FUNDING.yml</strong>，為你的開源專案設定贊助管道（即使只是放一個「Buy me a coffee」連結）。寫一段說明為什麼開源維護者值得被支持。</li>
 </ol>
+
+<h2>8.15 專案級端到端 Worked Example：開源專案「從個人 repo 到社群治理」專案</h2>
+<p>這是最後一哩：把單元 1–7 的全部知識串成一個<strong>完整的開源專案治理層</strong>——法律（LICENSE）、貢獻（CONTRIBUTING）、社群（CoC）、安全（SECURITY + 安全鏈）、發佈（自動 Release）、永續（FUNDING）。做完它，你的 repo 就是「一個準備好被世界使用的開源專案」。</p>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">產出檔案樹 · FILE TREE</div><pre>techco-lib/
+├── LICENSE                     <span class="hl-c"># MIT（單元 8.2）</span>
+├── CONTRIBUTING.md             <span class="hl-c"># 貢獻規範（單元 8.3）</span>
+├── CODE_OF_CONDUCT.md          <span class="hl-c"># 行為守則（單元 8.4）</span>
+├── SECURITY.md                 <span class="hl-c"># 漏洞回報管道</span>
+├── FUNDING.yml                 <span class="hl-c"># 贊助連結（單元 8 挑戰）</span>
+├── .github/
+│   ├── ISSUE_TEMPLATE/         <span class="hl-c"># bug / feature（單元 5）</span>
+│   ├── CODEOWNERS              <span class="hl-c"># 核心維護者（單元 4）</span>
+│   └── workflows/
+│       ├── ci.yml              <span class="hl-c"># 測試閘門（單元 7）</span>
+│       ├── codeql.yml          <span class="hl-c"># 安全掃描（單元 8.12）</span>
+│       └── release.yml         <span class="hl-c"># 打 tag 自動發佈（單元 8.5）</span>
+└── README.md                   <span class="hl-c"># 門面：徽章 + 快速開始</span></pre></div>
+  <div class="demo-block"><div class="demo-label">關鍵檔案 · KEY FILES</div><pre><span class="hl-c"># SECURITY.md（漏洞回報）</span>
+支援版本、如何回報（私訊 / security.txt）、
+回應 SLA、已知漏洞的修補時程。
+
+<span class="hl-c"># .github/workflows/release.yml 重點</span>
+on:
+  push: { tags: [ "v*" ] }
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm test
+      - run: npm publish --provenance
+        env: { NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} }
+      - uses: softprops/action-gh-release@v2</pre></div>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre><span class="hl-c"># 1. 檢查社群健康度（community health）</span>
+gh api /repos/TechCo/techco-lib/community/profile \
+  --jq '{health_score, files: .files}'
+<span class="hl-c"># 輸出 → LICENSE、README、CONTRIBUTING、
+#        CODE_OF_CONDUCT、SECURITY 全齊 → 高分</span>
+
+<span class="hl-c"># 2. 打 tag 自動發佈</span>
+git tag v1.0.0 && git push --tags
+gh release view v1.0.0 --json name,assets
+<span class="hl-c"># 輸出 → {"name":"v1.0.0","assets":[...]}</span>
+
+<span class="hl-c"># 3. 安全鏈總檢</span>
+gh api /repos/TechCo/techco-lib/dependabot/alerts --jq 'length'
+<span class="hl-c"># 輸出 → 0（無未修依賴漏洞）</span>
+
+<span class="hl-c"># 4. 認證 commit 比例（Verified）</span>
+git log --format='%G?' -10 | grep -c '^G'
+<span class="hl-c"># 輸出 → 10（10/10 為 Verified commit）</span></pre>
+</div>
+<div class="callout info"><strong>為什麼這是「專案級」：</strong>這把整門課收斂成一個「可以被世界使用的 repo」。法律文件決定別人能不能合法用、治理文件決定別人想不想參與、安全鏈決定別人敢不敢用、發佈自動化決定版本流不流暢——單元 1–7 的每個技巧，在這裡各就各位。</div>
+
+<h2>8.16 效能 / 品質 / 安全深度</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">效能 · PERFORMANCE</div><pre>- 自動化釋放維護者時間：release、triage、dependabot
+  都交給機器，人只做決策
+- 批次管理：gh CLI 一次處理多 repo / 多 issue
+- release 自動化：打 tag 即發佈，不需人工打包
+- 社群回覆 SLA 靠 bot + 模板，不靠記性
+- 大專案用 GraphQL / 分頁 API 控制 rate limit</pre></div>
+  <div class="demo-block"><div class="demo-label">品質 · QUALITY</div><pre>- Community Health 分數可量化治理完整度
+- Release Notes 依 PR 自動生成，格式一致
+- Issue triage 制度 + 模板維持回報品質
+- 文件（README / CONTRIBUTING）定期檢視
+- CI 徽章公開展示品質，貢獻者一眼看懂</pre></div>
+  <div class="demo-block"><div class="demo-label">安全 · SECURITY</div><pre>- SECURITY.md：明確漏洞回報管道與 SLA
+- 安全鏈全開：Secret scanning、Dependabot、
+  CodeQL、signed commits、branch protection
+- 發佈加 provenance（SLSA）防供應鏈竄改
+- 貢獻者不可直接 push，全部走 PR + 審查
+- 意外洩漏 Token：先撤銷 &gt; 再清理歷史（8.8 紅線）</pre></div>
+</div>
+
+<h2>8.17 站際比較：GitHub vs GitLab vs Markdown vs YAML vs JSON</h2>
+<table>
+<tr><th>面向</th><th>github</th><th>gitlab</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>授權</td><td>choosealicense 引導 + LICENSE 偵測</td><td>內建 license 工具</td><td>—（不涉及）</td><td>—（不涉及）</td><td>—（不涉及）</td></tr>
+<tr><td>貢獻治理</td><td>CONTRIBUTING + CODE_OF_CONDUCT 模板</td><td>同類模板 + contribution analytics</td><td>治理文件以 Markdown 撰寫</td><td>—</td><td>—</td></tr>
+<tr><td>安全鏈</td><td>Dependabot + CodeQL + Secret scanning</td><td>dependency scanning + SAST</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>發佈</td><td>Releases + 自動 notes + provenance</td><td>Releases（也支援）</td><td>Release notes 用 Markdown 撰寫</td><td>—</td><td>—</td></tr>
+<tr><td>與其他欄的關係</td><td>治理文件與文件全用 Markdown</td><td>同左</td><td>治理與說明文件的載體</td><td>dependabot / 自動化設定用 YAML</td><td>API 回傳社群與安全資料用 JSON</td></tr>
+</table>
+
+<h2>8.18 互動式進階檢核清單</h2>
+<div class="demo-render">
+  <ul>
+    <li><label><input type="checkbox"> 五大治理文件全齊：LICENSE / CONTRIBUTING / CODE_OF_CONDUCT / SECURITY / FUNDING。</label></li>
+    <li><label><input type="checkbox"> Community Health 分數達 90% 以上（gh api 可查）。</label></li>
+    <li><label><input type="checkbox"> 打 tag 即自動發佈，Release Notes 自動生成，產物齊全。</label></li>
+    <li><label><input type="checkbox"> 安全鏈全開：Dependabot、CodeQL、Secret scanning、signed commits。</label></li>
+    <li><label><input type="checkbox"> 有明確的漏洞回報管道與回應 SLA。</label></li>
+    <li><label><input type="checkbox"> 我已親自走完一次真實的「Fork → PR → 被合併」開源貢獻。</label></li>
+  </ul>
+</div>
 
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>

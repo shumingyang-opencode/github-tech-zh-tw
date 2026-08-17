@@ -226,6 +226,91 @@ git rebase main feature
   <li>比較 <code>git merge --no-ff</code> 與 <code>git merge</code>（fast-forward）在 DAG 上的差異。用 <code>git log --graph --oneline</code> 畫出兩種歷史的視覺差異。</li>
 </ol>
 
+<h2>4.13 專案級端到端 Worked Example：企業級 PR 治理專案</h2>
+<p>單元 4.9 完成「一次 PR」的流程；這裡把 PR 治理放大成<strong>整個 repo 的審查制度</strong>：用 CODEOWNERS 指定「誰必須審哪塊程式碼」、用 Merge Queue 讓 CI 永不打架、用自動指派避免 PR 沒人理、讓 Dependabot 的更新 PR 也走同一套閘門——這是單元 4.9 之上的整隊協作設計。</p>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">產出檔案樹 · FILE TREE</div><pre>techco-app/
+├── .github/
+│   ├── CODEOWNERS            <span class="hl-c"># 每個目錄的負責人</span>
+│   ├── auto_assign.yml       <span class="hl-c"># 自動指派 reviewer</span>
+│   ├── dependabot.yml        <span class="hl-c"># 依賴更新排程</span>
+│   └── workflows/
+│       └── ci.yml            <span class="hl-c"># 閘門（status check）</span>
+├── backend/src/              <span class="hl-c"># CODEOWNERS → @backend-team</span>
+├── frontend/src/             <span class="hl-c"># CODEOWNERS → @frontend-team</span>
+└── docs/                     <span class="hl-c"># CODEOWNERS → @docs-owner</span></pre></div>
+  <div class="demo-block"><div class="demo-label">關鍵檔案 · KEY FILES</div><pre><span class="hl-c"># .github/CODEOWNERS</span>
+*                   @techco/tech-lead
+/backend/           @techco/backend-team
+/frontend/          @techco/frontend-team
+/docs/              @techco/docs-owner
+
+<span class="hl-c"># .github/dependabot.yml</span>
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5</pre></div>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre><span class="hl-c"># 1. 確認 CODEOWNERS 生效：改 backend 的 PR 需 backend-team</span>
+gh pr view 102 --json reviews --jq '.reviews[].author.login'
+<span class="hl-c"># 輸出 → backend-team 的成員（被自動要求審查）</span>
+
+<span class="hl-c"># 2. Merge Queue 排隊狀態（多 PR 依序通過 CI）</span>
+gh api /repos/TechCo/app/merge-queue --jq '.[].title'
+<span class="hl-c"># 輸出 → PR #103、#104 依序等待中</span>
+
+<span class="hl-c"># 3. Dependabot 每週自動開的更新 PR</span>
+gh pr list --author app/dependabot --state open
+<span class="hl-c"># 輸出 → #98 Bump vite from 5.0 to 5.4</span></pre>
+</div>
+<div class="callout info"><strong>為什麼這是「專案級」：</strong>單元 4.9 是一人一 PR 的技術細節；這裡是「整隊 PR 的治理規則」。CODEOWNERS 讓審查責任自動對齊、Merge Queue 讓多人同時交付不會互相踩到、自動指派讓 PR 永遠有人看——這些是<strong>規模化</strong>之後才需要的設計。</div>
+
+<h2>4.14 效能 / 品質 / 安全深度</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">效能 · PERFORMANCE</div><pre>- Merge Queue 讓多個 PR 依序合併，
+  避免「A 合了、B 卻基於舊 main」的連環重跑
+- Auto-merge + 必要 check 讓合併零等待
+- 小 PR（&lt; 300 行）review 更快、衝突更少
+- CI 平行化：把慢的 job 拆開，別讓單一 job 卡全部
+- 控制 Dependabot 同時開的 PR 數量，避免 CI 塞爆</pre></div>
+  <div class="demo-block"><div class="demo-label">品質 · QUALITY</div><pre>- CODEOWNERS：改到哪塊就自動找對人審
+- 必填 review 數 + 必要 check = 合併品質下限
+- PR 模板統一：描述 / 測試 / 變更清單
+- Dependabot 自動升級依賴 → 品質不落後
+- require branches up-to-date：合併前必更新</pre></div>
+  <div class="demo-block"><div class="demo-label">安全 · SECURITY</div><pre>- 保護分支：禁止直接 push、require review
+- 敏感目錄（infra / backend）指定額外 owner
+- PR 描述與留言中不要貼 secrets / 憑證
+- Dependabot 的 PR 也走相同 CI 閘門
+- 對 fork 的 PR 謹慎執行 CI（見單元 7.16 提示）</pre></div>
+</div>
+
+<h2>4.15 站際比較：GitHub vs GitLab vs Markdown vs YAML vs JSON</h2>
+<table>
+<tr><th>面向</th><th>github</th><th>gitlab</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>審查流程</td><td>Pull Request（PR）</td><td>Merge Request（MR）</td><td>—（不涉及）</td><td>—（不涉及）</td><td>—（不涉及）</td></tr>
+<tr><td>審查工具</td><td>行內 comment / review / required reviewers</td><td>同類 + approval rules</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>合併策略</td><td>Merge / Squash / Rebase + Merge Queue</td><td>Merge commit / Squash / Rebase</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>自動化</td><td>CODEOWNERS、Dependabot、Actions</td><td>Code Owners、安全儀表板</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>與其他欄的關係</td><td>PR 模板可用 Markdown 或 YAML</td><td>MR 模板用 Markdown</td><td>PR 描述與留言載體</td><td>PR 模板 / 自動化設定用 YAML</td><td>API 回傳 PR 與 review 資料用 JSON</td></tr>
+</table>
+
+<h2>4.16 互動式進階檢核清單</h2>
+<div class="demo-render">
+  <ul>
+    <li><label><input type="checkbox"> 已設定 CODEOWNERS，改到各目錄都會自動找對負責人。</label></li>
+    <li><label><input type="checkbox"> 保護分支要求至少 1–2 人 Approve + CI 通過才能合併。</label></li>
+    <li><label><input type="checkbox"> 已啟用 Merge Queue（或至少 require branches up-to-date）。</label></li>
+    <li><label><input type="checkbox"> Dependabot 每週自動開更新 PR，且走同一套 CI 閘門。</label></li>
+    <li><label><input type="checkbox"> 每個 PR 有模板（描述 / 測試 / 變更清單）。</label></li>
+    <li><label><input type="checkbox"> 敏感目錄（infra / backend）有額外 owner 把關，PR 留言中從不貼 secrets。</label></li>
+  </ul>
+</div>
+
 </div>
 <footer>這是 GitHub 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.github.com/" rel="noopener">GitHub Docs</a>與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
